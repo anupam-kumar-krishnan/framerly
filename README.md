@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Framely
 
-## Getting Started
+Plain screenshots walk into the studio. Portfolio shots walk out.
 
-First, run the development server:
+Framely takes any screenshot and wraps it in a browser or device frame, sets the backdrop, casts the shadow, and hands back a polished image ready for your landing page, deck, or tweet.
+
+## Tech Stack
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=dark"><img alt="Language · TypeScript" src="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=light"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Lint-ESLint-4B32C3.svg?logo=eslint&amp;variant=branded&amp;mode=dark"><img alt="Lint · ESLint" src="https://www.shieldcn.dev/badge/Lint-ESLint-4B32C3.svg?logo=eslint&amp;variant=branded&amp;mode=light"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Framework-Next.js-000000.svg?logo=nextdotjs&amp;variant=branded&amp;mode=dark"><img alt="Framework · Next.js" src="https://www.shieldcn.dev/badge/Framework-Next.js-000000.svg?logo=nextdotjs&amp;variant=branded&amp;mode=light"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Stack-React-61DAFB.svg?logo=react&amp;variant=branded&amp;mode=dark"><img alt="React" src="https://www.shieldcn.dev/badge/Stack-React-61DAFB.svg?logo=react&amp;variant=branded&amp;mode=light"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Stack-Tailwind_CSS-06B6D4.svg?logo=tailwindcss&amp;variant=branded&amp;mode=dark"><img alt="Tailwind CSS" src="https://www.shieldcn.dev/badge/Stack-Tailwind_CSS-06B6D4.svg?logo=tailwindcss&amp;variant=branded&amp;mode=light"></picture>
+
+## Features
+
+- **Browser & device chrome** — Safari, Chrome, and bare frames, in light or dark, matched pixel-for-pixel to the real thing. <br>
+- **Backdrops that don't fight the shot** — gradient, solid, or image backgrounds tuned to sit behind your screenshot. <br>
+- **3D tilt and zoom** — angle the frame in space and dial the zoom until the composition feels intentional. <br>
+- **Layered shadow and padding** — independent controls for shadow depth, corner radius, and canvas padding. <br>
+- **Code snippet mode** — drop in a code block instead of a screenshot, with syntax themes, fonts, and window chrome. <br>
+- **Layer management** — reorder and toggle visibility across everything on the canvas. <br>
+- **Export at any size** — PNG, sized for a tweet, a deck slide, an App Store listing, or a 4K hero banner. <br><br>
+
+### Get Started
 
 ```bash
+git clone https://github.com/anupam-kumar-krishnan/framely.git
+cd framely
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to view it locally. The studio itself lives at `/app`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<hr>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+<div align="center">
 
-## Learn More
+&copy; Built for people who ship screenshots.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+</div>

@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="64" height="64" rx="14" fill="#F0A83A"/>
+
+  <!-- Lucide "Aperture" icon, exact path data, scaled from 24x24 to fit -->
+  <g transform="translate(14,14) scale(1.5)" fill="none" stroke="#1C1D21" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <path d="m14.31 8 5.74 9.94"/>
+    <path d="M9.69 8h11.48"/>
+    <path d="m7.38 12 5.74-9.94"/>
+    <path d="M9.69 16 3.95 6.06"/>
+    <path d="M14.31 16H2.83"/>
+    <path d="m16.62 12-5.74 9.94"/>
+  </g>
+</svg>
