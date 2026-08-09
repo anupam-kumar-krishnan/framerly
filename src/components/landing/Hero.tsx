@@ -33,7 +33,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-6 max-w-md text-lg text-ink-dim">
-            Drop in any screenshot. Framely wraps it in a browser or device
+            Drop in any screenshot. Framerly wraps it in a browser or device
             frame, sets the backdrop, casts the shadow, and hands back a PNG
             ready for your landing page, deck, or tweet.
           </p>

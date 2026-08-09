@@ -10,7 +10,7 @@ export type FrameStyle =
 
 export default function BrowserFrame({
   style,
-  url = "framely.app",
+  url = "framerly.app",
   children,
   className = "",
   headerScale = 100,

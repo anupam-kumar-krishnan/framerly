@@ -12,7 +12,8 @@ export default function Footer() {
           <span className="font-display text-sm font-semibold">Framely</span>
         </Link>
         <p className="text-xs text-ink-faint">
-          © {new Date().getFullYear()} Framely. Built for people who ship screenshots.
+          © {new Date().getFullYear()} Framerly. Built for people who ship
+          screenshots.
         </p>
         <div className="flex gap-6 text-xs text-ink-dim">
           <a href="#" className="hover:text-ink">

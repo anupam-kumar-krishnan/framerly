@@ -1,10 +1,10 @@
-<img width="1600" height="400" alt="framely-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
+<img width="1600" height="400" alt="framerly-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
 
 # 📸 _Framerly - [🌐 Live Link](https://framerly-shot.vercel.app/)_
 
 Plain screenshots walk into the studio. Portfolio shots walk out.
 
-Framely takes any screenshot and wraps it in a browser or device frame, sets the backdrop, casts the shadow, and hands back a polished image ready for your landing page, deck, or tweet.
+Framerly takes any screenshot and wraps it in a browser or device frame, sets the backdrop, casts the shadow, and hands back a polished image ready for your landing page, deck, or tweet.
 
 ## Tech Stack
 
@@ -29,7 +29,7 @@ Framely takes any screenshot and wraps it in a browser or device frame, sets the
 ```bash
 git clone https://github.com/anupam-kumar-krishnan/framerly.git
 
-cd framely
+cd framerly
 
 npm install
 

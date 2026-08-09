@@ -46,7 +46,7 @@ export default function TopBar({
             <Aperture size={15} strokeWidth={2.5} />
           </span>
           <span className="hidden font-display text-sm font-semibold sm:block">
-            Framely
+            Framerly
           </span>
         </Link>
 

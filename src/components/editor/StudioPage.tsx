@@ -95,7 +95,7 @@ export default function StudioPage() {
     if (!dataUrl) return;
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = "framely-shot.png";
+    a.download = "framerly-shot.png";
     a.click();
   }, [exportPng]);
 

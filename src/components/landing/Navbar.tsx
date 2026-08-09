@@ -10,7 +10,7 @@ export default function Navbar() {
             <Aperture size={18} strokeWidth={2.5} />
           </span>
           <span className="font-display text-lg font-semibold tracking-tight">
-            Framely
+            Framerly
           </span>
         </Link>
 
