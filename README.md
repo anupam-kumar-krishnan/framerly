@@ -1,6 +1,6 @@
 <img width="1600" height="400" alt="framely-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
 
-# 📸 _Framely - [🌐 Live Link](https://framely-beta.vercel.app/)_
+# 📸 _Framerly - [🌐 Live Link](https://framely-beta.vercel.app/)_
 
 Plain screenshots walk into the studio. Portfolio shots walk out.
 
