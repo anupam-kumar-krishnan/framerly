@@ -27,7 +27,7 @@ Framely takes any screenshot and wraps it in a browser or device frame, sets the
 ### Get Started
 
 ```bash
-git clone https://github.com/anupam-kumar-krishnan/framely.git
+git clone https://github.com/anupam-kumar-krishnan/framerly.git
 
 cd framely
 
