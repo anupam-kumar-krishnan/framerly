@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { toPng } from "html-to-image";
+import { toast } from "sonner";
 import TopBar from "@/components/editor/TopBar";
 import LeftPanel from "@/components/editor/LeftPanel";
 import Canvas from "@/components/editor/Canvas";
@@ -34,7 +35,10 @@ export default function StudioPage() {
   const [aspect, setAspect] = useState<AspectRatio>("4:3");
   const [image, setImage] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [layers, setLayers] = useState<LayerItem[]>([]);
+  const [layers, setLayers] = useState<LayerItem[]>([
+    { id: "content", label: "Content", visible: true },
+    { id: "background", label: "Background", visible: true },
+  ]);
 
   const [contentMode, setContentMode] = useState<ContentMode>("website");
   const [codeSnippet, setCodeSnippet] = useState<CodeSnippetState>({
@@ -82,7 +86,27 @@ export default function StudioPage() {
     setAspect("4:3");
     setImage(null);
     setContentMode("website");
+    setLayers([
+      { id: "content", label: "Content", visible: true },
+      { id: "background", label: "Background", visible: true },
+    ]);
   }, []);
+
+  const handleDeleteLayer = useCallback(
+    (id: LayerItem["id"]) => {
+      if (id === "content") {
+        if (contentMode === "code") {
+          setContentMode("website");
+        }
+        setImage(null);
+        toast.success("Content cleared");
+      } else if (id === "background") {
+        setBackground(BACKGROUND_PRESETS[8]);
+        toast.success("Background reset");
+      }
+    },
+    [contentMode],
+  );
 
   const handleSave = useCallback(async () => {
     const dataUrl = await exportPng();
@@ -139,6 +163,7 @@ export default function StudioPage() {
           onAddCodeToCanvas={() => setContentMode("code")}
           layers={layers}
           onLayers={setLayers}
+          onDeleteLayer={handleDeleteLayer}
         />
         <Canvas
           frameStyle={frameStyle}

@@ -119,6 +119,7 @@ export default function LeftPanel({
   onAddCodeToCanvas,
   layers,
   onLayers,
+  onDeleteLayer,
 }: {
   frameStyle: FrameStyle;
   onFrameStyle: (s: FrameStyle) => void;
@@ -137,6 +138,7 @@ export default function LeftPanel({
   onAddCodeToCanvas: () => void;
   layers: LayerItem[];
   onLayers: (l: LayerItem[]) => void;
+  onDeleteLayer: (id: LayerItem["id"]) => void;
 }) {
   const [tab, setTab] = useState<"design" | "background" | "code" | "layers">(
     "design",
@@ -285,7 +287,11 @@ export default function LeftPanel({
         )}
 
         {tab === "layers" && (
-          <LayersPanel layers={layers} onLayers={onLayers} />
+          <LayersPanel
+            layers={layers}
+            onLayers={onLayers}
+            onDeleteLayer={onDeleteLayer}
+          />
         )}
 
         {tab === "code" && (

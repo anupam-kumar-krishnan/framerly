@@ -16,6 +16,7 @@ import {
   LayerItem,
   ShadowPreset,
 } from "@/components/editor/types";
+import { toast } from "sonner";
 
 export default function StudioPage() {
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
@@ -114,6 +115,22 @@ export default function StudioPage() {
     }
   }, [exportPng]);
 
+  const handleDeleteLayer = useCallback(
+    (id: LayerItem["id"]) => {
+      if (id === "content") {
+        if (contentMode === "code") {
+          setContentMode("website");
+        }
+        setImage(null);
+        toast.success("Content cleared");
+      } else if (id === "background") {
+        setBackground(BACKGROUND_PRESETS[8]);
+        toast.success("Background reset");
+      }
+    },
+    [contentMode],
+  );
+
   return (
     <div className="flex h-screen flex-col bg-void text-ink">
       <TopBar
@@ -146,6 +163,7 @@ export default function StudioPage() {
           onAddCodeToCanvas={() => setContentMode("code")}
           layers={layers}
           onLayers={setLayers}
+          onDeleteLayer={handleDeleteLayer}
         />
         <Canvas
           frameStyle={frameStyle}

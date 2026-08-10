@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, GripVertical } from "lucide-react";
+import { Eye, EyeOff, GripVertical, Trash2 } from "lucide-react";
 import { LayerItem } from "./types";
 
 export default function LayersPanel({
   layers,
   onLayers,
+  onDeleteLayer,
 }: {
   layers: LayerItem[];
   onLayers: (l: LayerItem[]) => void;
+  onDeleteLayer: (id: LayerItem["id"]) => void;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
@@ -54,6 +56,12 @@ export default function LayersPanel({
             className="text-ink-faint transition hover:text-ink"
           >
             {layer.visible ? <Eye size={15} /> : <EyeOff size={15} />}
+          </button>
+          <button
+            onClick={() => onDeleteLayer(layer.id)}
+            className="text-ink-faint transition hover:text-red-400"
+          >
+            <Trash2 size={15} />
           </button>
         </div>
       ))}
