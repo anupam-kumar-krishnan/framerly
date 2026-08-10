@@ -40,6 +40,7 @@ export default function StudioPage() {
     language: "javascript",
     theme: "dracula",
     font: "JetBrains Mono",
+    fontSize: 14,
     showLineNumbers: true,
     showWindowChrome: true,
     compact: false,
@@ -161,10 +162,12 @@ export default function StudioPage() {
           aspect={aspect}
           image={image}
           onImage={setImage}
+          onRemoveImage={() => setImage(null)}
           canvasRef={canvasRef}
           isExporting={isExporting}
           contentMode={contentMode}
           codeSnippet={codeSnippet}
+          onRemoveCode={() => setContentMode("website")}
           showRulers={showRulers}
           showGrid={showGrid}
           layers={layers}

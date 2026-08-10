@@ -23,7 +23,7 @@ export default function StudioPage() {
   const [headerSize, setHeaderSize] = useState(100);
   const [shadow, setShadow] = useState<ShadowPreset>("soft");
   const [background, setBackground] = useState<BackgroundPreset>(
-    BACKGROUND_PRESETS[0],
+    BACKGROUND_PRESETS[8],
   );
 
   const [padding, setPadding] = useState(10);
@@ -38,10 +38,11 @@ export default function StudioPage() {
 
   const [contentMode, setContentMode] = useState<ContentMode>("website");
   const [codeSnippet, setCodeSnippet] = useState<CodeSnippetState>({
-    code: `function greet(name) {\n  return \`Hello, \${name}!\`;\n}`,
+    code: `function greet(name) {\n  return \`Hello, Framely!\`;\n}`,
     language: "javascript",
     theme: "dracula",
     font: "JetBrains Mono",
+    fontSize: 14,
     showLineNumbers: true,
     showWindowChrome: true,
     compact: false,
@@ -72,7 +73,7 @@ export default function StudioPage() {
     setUrl("framerly.vercel.app");
     setHeaderSize(100);
     setShadow("soft");
-    setBackground(BACKGROUND_PRESETS[0]);
+    setBackground(BACKGROUND_PRESETS[8]);
     setPadding(10);
     setRadius(16);
     setZoom(100);
@@ -154,10 +155,12 @@ export default function StudioPage() {
           aspect={aspect}
           image={image}
           onImage={setImage}
+          onRemoveImage={() => setImage(null)}
           canvasRef={canvasRef}
           isExporting={isExporting}
           contentMode={contentMode}
           codeSnippet={codeSnippet}
+          onRemoveCode={() => setContentMode("website")}
           showRulers={showRulers}
           showGrid={showGrid}
           layers={layers}

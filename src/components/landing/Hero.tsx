@@ -15,20 +15,32 @@ export default function Hero() {
       />
       <div className="mx-auto grid max-w-6xl items-center gap-16 px-6 pb-20 pt-16 lg:grid-cols-2 lg:pb-28 lg:pt-24">
         <div className="relative z-10">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-xs text-ink-dim">
-            <Sparkles size={12} className="text-amber" />
-            <span className="font-mono">Now with 3D tilt</span>
+          <div className="relative mb-6 inline-flex overflow-hidden rounded-full p-[1px]">
+            {/* Spinning gradient background */}
+            <div
+              className="absolute inset-0 animate-[spin_2.5s_linear_infinite]
+              [background:conic-gradient(from_0deg,transparent_0%,theme(colors.amber)_20%,transparent_45%)]"
+            />
+
+            {/* Pill content sits on top, covering the center and leaving a 1px ring visible */}
+            <div className="relative inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1 text-xs text-ink-dim">
+              <Sparkles size={12} className="text-amber" />
+              <span className="font-mono">New angle unlocked</span>
+            </div>
           </div>
 
           <h1 className="font-display text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
             Plain screenshots
             <br />
-            <span className="text-ink-dim">walk into the studio.</span>
+            <span className="text-ink-dim whitespace-nowrap">
+              walk into the Studio.
+            </span>
             <br />
             <span className="relative inline-block">
               Portfolio shots
               <span className="absolute -bottom-1 left-0 h-1.5 w-full rounded-full bg-amber/70" />
             </span>{" "}
+            <br />
             walk out.
           </h1>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Globe, Plus } from "lucide-react";
+import { Camera, Globe, Plus, Trash2, Trash2Icon, X } from "lucide-react";
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
 import CodeBlock from "./CodeBlock";
 import {
@@ -14,6 +14,7 @@ import {
   SHADOW_CSS,
   ShadowPreset,
 } from "./types";
+import { toast } from "sonner";
 
 const RULER_SIZE = 20;
 const TICK_GAP = 50;
@@ -86,6 +87,8 @@ export default function Canvas({
   aspect,
   image,
   onImage,
+  onRemoveImage,
+  onRemoveCode,
   canvasRef,
   isExporting,
   contentMode,
@@ -109,6 +112,8 @@ export default function Canvas({
   image: string | null;
   isExporting: boolean;
   onImage: (dataUrl: string) => void;
+  onRemoveImage: () => void;
+  onRemoveCode: () => void;
   canvasRef: React.RefObject<HTMLDivElement | null>;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
@@ -136,7 +141,10 @@ export default function Canvas({
     (file: File | null | undefined) => {
       if (!file || !file.type.startsWith("image/")) return;
       const reader = new FileReader();
-      reader.onload = () => onImage(reader.result as string);
+      reader.onload = () => {
+        onImage(reader.result as string);
+        toast.success("Image updated");
+      };
       reader.readAsDataURL(file);
     },
     [onImage],
@@ -242,8 +250,7 @@ export default function Canvas({
               />
               <div className="absolute inset-0 bg-black/10" />
 
-              <button
-                onClick={() => inputRef.current?.click()}
+              <div
                 onDragOver={(e) => {
                   e.preventDefault();
                   setDragging(true);
@@ -261,12 +268,13 @@ export default function Canvas({
                   dragging ? "bg-white/20" : "bg-white/10 hover:bg-white/15"
                 }`}
               >
-                <span
+                <button
+                  onClick={() => inputRef.current?.click()}
                   className="flex h-12 w-12 items-center justify-center rounded-full text-white/90"
                   style={{ border: "1px solid rgba(255,255,255,0.7)" }}
                 >
                   <Plus size={20} />
-                </span>
+                </button>
                 <span className="text-sm font-medium text-white">
                   Drag &amp; drop, click to browse, or paste
                 </span>
@@ -286,7 +294,6 @@ export default function Canvas({
                 </div>
 
                 <div
-                  onClick={(e) => e.stopPropagation()}
                   className="flex w-full items-center gap-2 rounded-lg bg-black/30 px-3 py-2"
                   style={{ border: "1px solid rgba(255,255,255,0.5)" }}
                 >
@@ -299,7 +306,7 @@ export default function Canvas({
                   />
                   <Camera size={14} className="shrink-0 text-white/60" />
                 </div>
-              </button>
+              </div>
             </div>
           ) : (
             <div
@@ -329,14 +336,46 @@ export default function Canvas({
           )}
 
           {contentMode === "website" && image && !isExporting && (
-            <button
+            <div
               data-export-ignore="true"
-              onClick={() => inputRef.current?.click()}
-              className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-xs text-white/80 backdrop-blur transition hover:bg-black/60"
+              className="absolute bottom-4 right-4 flex items-center gap-2"
             >
-              <Camera size={12} />
-              Replace
-            </button>
+              <button
+                onClick={() => inputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-xs text-white/80 backdrop-blur transition hover:bg-black/60"
+              >
+                <Camera size={12} />
+                Replace
+              </button>
+              <button
+                onClick={() => {
+                  onRemoveImage();
+                  toast.success("Image removed");
+                }}
+                className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-xs text-white/80 backdrop-blur transition hover:bg-black/60"
+              >
+                <Trash2Icon size={12} />
+                Remove
+              </button>
+            </div>
+          )}
+
+          {contentMode === "code" && !isExporting && (
+            <div
+              data-export-ignore="true"
+              className="absolute bottom-4 right-4 flex items-center gap-2"
+            >
+              <button
+                onClick={() => {
+                  onRemoveCode();
+                  toast.success("Code snippet removed");
+                }}
+                className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/40 px-3 py-1.5 text-xs text-white/80 backdrop-blur transition hover:bg-red-500"
+              >
+                <Trash2 size={12} />
+                Remove
+              </button>
+            </div>
           )}
         </div>
 

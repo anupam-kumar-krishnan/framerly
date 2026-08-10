@@ -161,7 +161,7 @@ export default function LeftPanel({
             }`}
           >
             <t.icon size={14} />
-            {t.id === "design" && t.label}
+            {tab === t.id && t.label}
           </button>
         ))}
       </div>

@@ -206,6 +206,7 @@ export type CodeSnippetState = {
   language: string;
   theme: CodeTheme;
   font: string;
+  fontSize: number;
   showLineNumbers: boolean;
   showWindowChrome: boolean;
   compact: boolean; // "Less" padding toggle

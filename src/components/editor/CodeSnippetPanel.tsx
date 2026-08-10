@@ -132,6 +132,23 @@ export default function CodeSnippetPanel({
             ))}
           </select>
 
+          <div>
+            <div className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-widest text-ink-dim">
+              Font size
+              <span className="font-mono text-[11px] normal-case text-ink-dim">
+                {snippet.fontSize || 14}px
+              </span>
+            </div>
+            <input
+              type="range"
+              min={10}
+              max={28}
+              value={snippet.fontSize || 14}
+              onChange={(e) => patch({ fontSize: Number(e.target.value) })}
+              className="w-full"
+            />
+          </div>
+
           <div className="overflow-hidden rounded-lg">
             <CodeBlock snippet={snippet} />
           </div>

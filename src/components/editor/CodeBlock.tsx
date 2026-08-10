@@ -28,6 +28,7 @@ export default function CodeBlock({ snippet }: { snippet: CodeSnippetState }) {
     language,
     theme,
     font,
+    fontSize,
     showLineNumbers,
     showWindowChrome,
     compact,
@@ -53,7 +54,7 @@ export default function CodeBlock({ snippet }: { snippet: CodeSnippetState }) {
           margin: 0,
           padding: compact ? "0.75rem 1rem" : "1.25rem 1.5rem",
           background: "transparent",
-          fontSize: "14px",
+          fontSize: `${fontSize || 14}px`,
           lineHeight: 1.6,
         }}
         codeTagProps={{
