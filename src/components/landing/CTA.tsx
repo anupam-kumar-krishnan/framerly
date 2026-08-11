@@ -13,8 +13,8 @@ export default function CTA() {
       />
       <div className="relative mx-auto max-w-3xl px-6 py-28 text-center">
         <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">
-          Your next screenshot deserves
-          <br /> better lighting.
+          Your next <span className="text-amber-400">screenshot</span> deserves
+          <br /> better <span className="text-amber-400">lighting.</span>
         </h2>
         <p className="mx-auto mt-5 max-w-md text-ink-dim">
           Open the studio, drop in an image, and see it framed in under ten
@@ -25,7 +25,10 @@ export default function CTA() {
           className="group mt-9 inline-flex items-center gap-2 rounded-full bg-amber px-7 py-3.5 font-medium text-amber-ink transition hover:bg-amber-soft"
         >
           Open the studio
-          <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
+          <ArrowRight
+            size={16}
+            className="transition group-hover:translate-x-0.5"
+          />
         </Link>
       </div>
     </section>

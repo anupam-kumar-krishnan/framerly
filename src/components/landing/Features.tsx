@@ -62,10 +62,9 @@ export default function Features() {
               key={f.title}
               className="group relative bg-panel p-7 transition hover:bg-panel-2"
             >
-              <f.icon
-                size={20}
-                className="text-amber transition group-hover:scale-110"
-              />
+              <div className="inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-amber to-amber-soft p-2.5 shadow-[0_4px_12px_rgba(232,163,61,0.4),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15)] transition group-hover:scale-110">
+                <f.icon size={20} className="text-panel" strokeWidth={2.25} />
+              </div>
               <h3 className="mt-5 font-display text-base font-semibold">
                 {f.title}
               </h3>

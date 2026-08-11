@@ -30,18 +30,18 @@ export default function Hero() {
           </div>
 
           <h1 className="font-display text-[2.6rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-            Plain screenshots
+            Plain <span className="text-amber-400">Screenshots</span>
             <br />
             <span className="text-ink-dim whitespace-nowrap">
-              walk into the Studio.
+              walk into the <span className="text-amber-400">Studio.</span>
             </span>
             <br />
             <span className="relative inline-block">
-              Portfolio shots
+              Portfolio <span className="text-amber-400">Shots</span>
               <span className="absolute -bottom-1 left-0 h-1.5 w-full rounded-full bg-amber/70" />
             </span>{" "}
             <br />
-            walk out.
+            walk <span className="text-amber-400">out.</span>
           </h1>
 
           <p className="mt-6 max-w-md text-lg text-ink-dim">
