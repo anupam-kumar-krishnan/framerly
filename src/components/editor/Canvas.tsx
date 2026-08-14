@@ -24,6 +24,7 @@ import {
   ShadowPreset,
 } from "./types";
 import { toast } from "sonner";
+import { PageTheme } from "./LeftPanel";
 
 const RULER_SIZE = 20;
 const TICK_GAP = 50;
@@ -125,6 +126,7 @@ export default function Canvas({
   showRulers,
   showGrid,
   layers,
+  pageTheme,
 }: {
   frameStyle: FrameStyle;
   url: string;
@@ -149,6 +151,7 @@ export default function Canvas({
   showRulers: boolean;
   showGrid: boolean;
   layers: LayerItem[];
+  pageTheme: PageTheme;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false); // file drop hover state
@@ -307,7 +310,7 @@ export default function Canvas({
     setCapturing(true);
     try {
       const res = await fetch(
-        `/api/screenshot?url=${encodeURIComponent(target)}`,
+        `/api/screenshot?url=${encodeURIComponent(target)}&dark_mode=${pageTheme === "dark"}`,
       );
       const body = await res.json().catch(() => null);
       if (!res.ok || !body?.image) {
@@ -322,7 +325,7 @@ export default function Canvas({
     } finally {
       setCapturing(false);
     }
-  }, [url, capturing, onImage]);
+  }, [url, capturing, onImage, pageTheme]);
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -334,6 +337,20 @@ export default function Canvas({
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
   }, [readFile]);
+
+  const isFirstThemeRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstThemeRender.current) {
+      isFirstThemeRender.current = false;
+      return;
+    }
+    // Only re-capture if we're actually showing a captured website
+    if (contentMode === "website" && image && url.trim()) {
+      handleCapture();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageTheme]);
 
   const backgroundLayer = layers.find((l) => l.id === "background");
   const contentLayer = layers.find((l) => l.id === "content");

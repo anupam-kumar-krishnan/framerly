@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import TopBar from "@/components/editor/TopBar";
-import LeftPanel from "@/components/editor/LeftPanel";
+import LeftPanel, { PageTheme } from "@/components/editor/LeftPanel";
 import Canvas from "@/components/editor/Canvas";
 import RightPanel from "@/components/editor/RightPanel";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 export default function StudioPage() {
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
   const [url, setUrl] = useState("framerly.vercel.app");
+  const [pageTheme, setPageTheme] = useState<PageTheme>("dark");
   const [headerSize, setHeaderSize] = useState(100);
   const [shadow, setShadow] = useState<ShadowPreset>("soft");
   const [background, setBackground] = useState<BackgroundPreset>(
@@ -75,6 +76,7 @@ export default function StudioPage() {
   const handleReset = useCallback(() => {
     setFrameStyle("chrome-dark");
     setUrl("framerly.vercel.app");
+    setPageTheme("dark");
     setHeaderSize(100);
     setShadow("soft");
     setBackground(BACKGROUND_PRESETS[0]);
@@ -150,6 +152,8 @@ export default function StudioPage() {
           onFrameStyle={setFrameStyle}
           url={url}
           onUrl={setUrl}
+          pageTheme={pageTheme}
+          onPageTheme={setPageTheme}
           headerSize={headerSize}
           onHeaderSize={setHeaderSize}
           shadow={shadow}
@@ -169,6 +173,7 @@ export default function StudioPage() {
           frameStyle={frameStyle}
           url={url}
           onUrl={setUrl}
+          pageTheme={pageTheme}
           headerSize={headerSize}
           shadow={shadow}
           background={background}

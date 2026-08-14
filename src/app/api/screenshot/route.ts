@@ -22,11 +22,13 @@ export async function GET(req: NextRequest) {
     ? targetUrl
     : `https://${targetUrl}`;
 
+  const darkModeParam = req.nextUrl.searchParams.get("dark_mode") ?? "true";
+
   const params = new URLSearchParams({
     url: normalized,
     format: "png", // lossless, no compression artifacts
     full_page: "false", // set "true" to capture full scroll height
-    dark_mode: "false",
+    dark_mode: darkModeParam === "true" ? "true" : "false",
     block_ads: "true",
   });
 

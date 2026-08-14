@@ -7,6 +7,8 @@ import {
   Layers,
   ChevronDown,
   Shuffle,
+  Sun,
+  Moon,
 } from "lucide-react";
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
 import { BACKGROUND_GROUPS, BackgroundPreset, ShadowPreset } from "./types";
@@ -29,6 +31,10 @@ const SHADOWS: { id: ShadowPreset; label: string }[] = [
   { id: "hard", label: "Hard" },
   { id: "long", label: "Long" },
 ];
+
+// Page content theme passed to the screenshot API (independent of the
+// browser chrome style, which is controlled separately via STYLES above).
+export type PageTheme = "light" | "dark";
 
 // Groups rendered as a 2-row, horizontally-scrolling strip instead of a
 // wrapping grid. Add/remove titles here to control which sections scroll.
@@ -196,6 +202,8 @@ export default function LeftPanel({
   onFrameStyle,
   url,
   onUrl,
+  pageTheme,
+  onPageTheme,
   headerSize,
   onHeaderSize,
   shadow,
@@ -215,6 +223,8 @@ export default function LeftPanel({
   onFrameStyle: (s: FrameStyle) => void;
   url: string;
   onUrl: (u: string) => void;
+  pageTheme: PageTheme;
+  onPageTheme: (t: PageTheme) => void;
   headerSize: number;
   onHeaderSize: (n: number) => void;
   shadow: ShadowPreset;
@@ -310,6 +320,33 @@ export default function LeftPanel({
                 placeholder="yoursite.com"
                 className="w-full rounded-md border border-line bg-panel-2 px-3 py-2 font-mono text-xs text-ink outline-none focus:border-amber"
               />
+            </Section>
+
+            <Section title="Theme">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onPageTheme("light")}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg border-2 bg-panel-2 py-2 text-xs font-medium transition ${
+                    pageTheme === "light"
+                      ? "border-amber text-ink"
+                      : "border-transparent text-ink-dim hover:border-line"
+                  }`}
+                >
+                  <Sun size={13} />
+                  Light
+                </button>
+                <button
+                  onClick={() => onPageTheme("dark")}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg border-2 bg-panel-2 py-2 text-xs font-medium transition ${
+                    pageTheme === "dark"
+                      ? "border-amber text-ink"
+                      : "border-transparent text-ink-dim hover:border-line"
+                  }`}
+                >
+                  <Moon size={13} />
+                  Dark
+                </button>
+              </div>
             </Section>
 
             <Section title="Header size">
