@@ -15,6 +15,8 @@ import {
   ContentMode,
   LayerItem,
   ShadowPreset,
+  getBackgroundById,
+  DEFAULT_BACKGROUND_ID,
 } from "@/components/editor/types";
 import { toast } from "sonner";
 
@@ -24,7 +26,7 @@ export default function StudioPage() {
   const [headerSize, setHeaderSize] = useState(100);
   const [shadow, setShadow] = useState<ShadowPreset>("soft");
   const [background, setBackground] = useState<BackgroundPreset>(
-    BACKGROUND_PRESETS[0],
+    getBackgroundById(DEFAULT_BACKGROUND_ID),
   );
   const [padding, setPadding] = useState(10);
   const [radius, setRadius] = useState(16);
@@ -77,7 +79,7 @@ export default function StudioPage() {
     setUrl("framerly.vercel.app");
     setHeaderSize(100);
     setShadow("soft");
-    setBackground(BACKGROUND_PRESETS[0]);
+    setBackground(getBackgroundById(DEFAULT_BACKGROUND_ID));
     setPadding(10);
     setRadius(16);
     setZoom(100);
@@ -124,7 +126,7 @@ export default function StudioPage() {
         setImage(null);
         toast.success("Content cleared");
       } else if (id === "background") {
-        setBackground(BACKGROUND_PRESETS[8]);
+        setBackground(getBackgroundById(DEFAULT_BACKGROUND_ID));
         toast.success("Background reset");
       }
     },
@@ -205,6 +207,16 @@ export default function StudioPage() {
             setTiltY(p.tiltY);
             setPadding(p.padding);
           }}
+          padding={padding}
+          background={background}
+          frameStyle={frameStyle}
+          url={url}
+          headerSize={headerSize}
+          shadow={shadow}
+          radius={radius}
+          image={image}
+          contentMode={contentMode}
+          codeSnippet={codeSnippet}
         />
       </div>
     </div>

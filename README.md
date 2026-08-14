@@ -22,7 +22,10 @@ Framerly takes any screenshot and wraps it in a browser or device frame, sets th
 - **Layered shadow and padding** — independent controls for shadow depth, corner radius, and canvas padding. <br>
 - **Code snippet mode** — drop in a code block instead of a screenshot, with syntax themes, fonts, and window chrome. <br>
 - **Layer management** — reorder and toggle visibility across everything on the canvas. <br>
-- **Export at any size** — PNG, sized for a tweet, a deck slide, an App Store listing, or a 4K hero banner. <br><br>
+- **Export at any size** — PNG, sized for a tweet, a deck slide, an App Store listing, or a 4K hero banner. <br>
+- **75+ Backgrounds** — Choose from a curated library of backgrounds across multiple styles: Gradients, Patterns, macOS, Radial and Abstract. <br>
+- **Angle Preview** — Instantly preview your design from every angle before exporting. <br>
+- **Website Screenshot** — Generate a screenshot directly from a website link, no manual upload needed.
 
 ### Get Started
 

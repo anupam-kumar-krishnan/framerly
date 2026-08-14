@@ -2,6 +2,15 @@
 
 import { useRef, useState } from "react";
 import { ChevronDown, ChevronUp, PlayCircle, Shapes } from "lucide-react";
+import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
+import CodeBlock from "./CodeBlock";
+import {
+  BackgroundPreset,
+  CodeSnippetState,
+  ContentMode,
+  SHADOW_CSS,
+  ShadowPreset,
+} from "./types";
 
 type Preset = {
   label: string;
@@ -51,10 +60,32 @@ function TiltPad({
   tiltX,
   tiltY,
   onChange,
+  zoom,
+  padding,
+  background,
+  frameStyle,
+  url,
+  headerSize,
+  shadow,
+  radius,
+  image,
+  contentMode,
+  codeSnippet,
 }: {
   tiltX: number;
   tiltY: number;
   onChange: (x: number, y: number) => void;
+  zoom: number;
+  padding: number;
+  background: BackgroundPreset;
+  frameStyle: FrameStyle;
+  url: string;
+  headerSize: number;
+  shadow: ShadowPreset;
+  radius: number;
+  image: string | null;
+  contentMode: ContentMode;
+  codeSnippet: CodeSnippetState;
 }) {
   const padRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -84,16 +115,141 @@ function TiltPad({
       onPointerMove={(e) => dragging && updateFromEvent(e.clientX, e.clientY)}
       onPointerUp={() => setDragging(false)}
       className="relative aspect-4/3 w-full cursor-crosshair overflow-hidden rounded-xl border border-line bg-panel-2"
-      style={{
-        backgroundImage:
-          "linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px)",
-        backgroundSize: "16px 16px",
-      }}
     >
+      {/* live preview fills the pad — dragging anywhere on it sets tilt */}
+      <MiniStage
+        zoom={zoom}
+        tiltX={tiltX}
+        tiltY={tiltY}
+        padding={padding}
+        background={background}
+        frameStyle={frameStyle}
+        url={url}
+        headerSize={headerSize}
+        shadow={shadow}
+        radius={radius}
+        image={image}
+        contentMode={contentMode}
+        codeSnippet={codeSnippet}
+        className="pointer-events-none absolute inset-0 rounded-none border-0"
+      />
+
+      {/* faint alignment grid on top of the preview */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.25) 1px, transparent 1px)",
+          backgroundSize: "16px 16px",
+        }}
+      />
+
       <div
         className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-void bg-amber shadow-[0_0_0_1px_var(--amber)]"
         style={{ left: `${dotX}%`, top: `${dotY}%` }}
       />
+    </div>
+  );
+}
+
+// Renders a scaled-down replica of the canvas (background + frame/content)
+// at a given zoom/tilt/padding, so both the live preview and each preset
+// button can show what that setting actually looks like with the user's
+// real screenshot/code, background, and frame style.
+function MiniStage({
+  zoom,
+  tiltX,
+  tiltY,
+  padding,
+  background,
+  frameStyle,
+  url,
+  headerSize,
+  shadow,
+  radius,
+  image,
+  contentMode,
+  codeSnippet,
+  className = "",
+}: {
+  zoom: number;
+  tiltX: number;
+  tiltY: number;
+  padding: number;
+  background: BackgroundPreset;
+  frameStyle: FrameStyle;
+  url: string;
+  headerSize: number;
+  shadow: ShadowPreset;
+  radius: number;
+  image: string | null;
+  contentMode: ContentMode;
+  codeSnippet: CodeSnippetState;
+  className?: string;
+}) {
+  // Clamp padding/radius so a preset with a large value doesn't overwhelm
+  // a small thumbnail; the live preview (larger box) still reads clearly.
+  const safePadding = Math.min(padding, 20);
+  const safeRadius = Math.min(radius, 14);
+
+  const hasContent = contentMode === "code" || !!image;
+
+  return (
+    <div
+      className={`relative aspect-4/3 w-full overflow-hidden rounded-lg border border-line bg-black ${className}`}
+    >
+      <div
+        className="absolute inset-0"
+        style={
+          background.image
+            ? {
+                backgroundImage: `url(${background.image})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : { background: background.css }
+        }
+      />
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        style={{ padding: `${safePadding}%`, perspective: "900px" }}
+      >
+        {!hasContent ? (
+          <span className="text-[10px] text-white/40">No content yet</span>
+        ) : (
+          <div
+            className="w-full max-w-[220px]"
+            style={{
+              transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <div
+              style={{
+                boxShadow: SHADOW_CSS[shadow],
+                borderRadius: safeRadius,
+              }}
+            >
+              {contentMode === "code" ? (
+                <CodeBlock snippet={codeSnippet} />
+              ) : (
+                <BrowserFrame
+                  style={frameStyle}
+                  url={url || "yoursite.com"}
+                  className="w-full"
+                  headerScale={headerSize}
+                  radius={safeRadius}
+                >
+                  <div
+                    className="relative h-full w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url(${image})` }}
+                  />
+                </BrowserFrame>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -105,6 +261,16 @@ export default function RightPanel({
   tiltY,
   onTilt,
   onPreset,
+  padding,
+  background,
+  frameStyle,
+  url,
+  headerSize,
+  shadow,
+  radius,
+  image,
+  contentMode,
+  codeSnippet,
 }: {
   zoom: number;
   onZoom: (n: number) => void;
@@ -112,9 +278,31 @@ export default function RightPanel({
   tiltY: number;
   onTilt: (x: number, y: number) => void;
   onPreset: (p: Preset) => void;
+  padding: number;
+  background: BackgroundPreset;
+  frameStyle: FrameStyle;
+  url: string;
+  headerSize: number;
+  shadow: ShadowPreset;
+  radius: number;
+  image: string | null;
+  contentMode: ContentMode;
+  codeSnippet: CodeSnippetState;
 }) {
   const [mode, setMode] = useState<"3d" | "flat">("3d");
   const [openGroup, setOpenGroup] = useState<string>("Popular");
+
+  const stageProps = {
+    background,
+    frameStyle,
+    url,
+    headerSize,
+    shadow,
+    radius,
+    image,
+    contentMode,
+    codeSnippet,
+  };
 
   return (
     <aside className="flex w-72 shrink-0 flex-col border-l border-line-soft bg-panel">
@@ -149,7 +337,14 @@ export default function RightPanel({
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-dim">
               Tilt
             </p>
-            <TiltPad tiltX={tiltX} tiltY={tiltY} onChange={onTilt} />
+            <TiltPad
+              tiltX={tiltX}
+              tiltY={tiltY}
+              onChange={onTilt}
+              zoom={zoom}
+              padding={padding}
+              {...stageProps}
+            />
             <p className="mt-2 text-center font-mono text-[11px] text-ink-faint">
               x {tiltX}° · y {tiltY}°
             </p>
@@ -192,14 +387,24 @@ export default function RightPanel({
                   )}
                 </button>
                 {openGroup === g.title && (
-                  <div className="grid grid-cols-2 gap-2 pb-3">
+                  <div className="grid grid-cols-1 gap-2 pb-3">
                     {g.presets.map((p) => (
                       <button
                         key={p.label}
                         onClick={() => onPreset(p)}
-                        className="rounded-lg border border-line bg-panel-2 px-3 py-2 text-left text-[11px] text-ink-dim transition hover:border-amber/50 hover:text-ink"
+                        className="group overflow-hidden rounded-lg border border-line bg-panel-2 text-left transition hover:border-amber/50"
                       >
-                        {p.label}
+                        <MiniStage
+                          zoom={p.zoom}
+                          tiltX={p.tiltX}
+                          tiltY={p.tiltY}
+                          padding={p.padding}
+                          {...stageProps}
+                          className="rounded-none border-0 border-b border-line"
+                        />
+                        <span className="block px-2.5 py-1.5 text-[11px] text-ink-dim transition group-hover:text-ink">
+                          {p.label}
+                        </span>
                       </button>
                     ))}
                   </div>

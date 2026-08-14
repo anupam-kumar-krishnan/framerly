@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Globe, Plus, Trash2, Trash2Icon, X } from "lucide-react";
+import {
+  Camera,
+  Globe,
+  Loader2,
+  Plus,
+  RotateCw,
+  Trash2,
+  Trash2Icon,
+  X,
+} from "lucide-react";
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
 import CodeBlock from "./CodeBlock";
 import {
@@ -18,6 +27,8 @@ import { toast } from "sonner";
 
 const RULER_SIZE = 20;
 const TICK_GAP = 50;
+const SNAP_THRESHOLD = 6; // px
+const ROTATE_SNAP_THRESHOLD = 4; // deg, snaps to multiples of 45
 
 function Ruler({
   length,
@@ -72,6 +83,24 @@ function Ruler({
   );
 }
 
+// Small square handle rendered at each corner of the selection box.
+function CornerHandle({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
+  const posClass = {
+    tl: "-left-1.5 -top-1.5 cursor-nwse-resize",
+    tr: "-right-1.5 -top-1.5 cursor-nesw-resize",
+    bl: "-left-1.5 -bottom-1.5 cursor-nesw-resize",
+    br: "-right-1.5 -bottom-1.5 cursor-nwse-resize",
+  }[position];
+
+  return (
+    <div
+      data-no-drag="true"
+      className={`absolute h-3 w-3 rounded-[2px] bg-white shadow-sm ${posClass}`}
+      style={{ border: "2px solid #3b82f6" }}
+    />
+  );
+}
+
 export default function Canvas({
   frameStyle,
   url,
@@ -122,9 +151,122 @@ export default function Canvas({
   layers: LayerItem[];
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
+  const [dragging, setDragging] = useState(false); // file drop hover state
+  const [capturing, setCapturing] = useState(false); // website screenshot loading state
   const viewportRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+
+  // --- Movable / selectable frame state -----------------------------------
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState(0);
+  const [guide, setGuide] = useState({ x: false, y: false });
+  const [isTransforming, setIsTransforming] = useState(false);
+
+  const resetTransform = useCallback(() => {
+    setPos({ x: 0, y: 0 });
+    setRotation(0);
+    setSelected(false);
+  }, []);
+
+  // Reset position/rotation whenever the content itself goes away or swaps mode
+  useEffect(() => {
+    resetTransform();
+  }, [image, contentMode, resetTransform]);
+
+  const handleDragStart = useCallback(
+    (e: React.PointerEvent) => {
+      if ((e.target as HTMLElement).closest("[data-no-drag]")) return;
+      e.stopPropagation();
+      setSelected(true);
+      setIsTransforming(true);
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const origX = pos.x;
+      const origY = pos.y;
+
+      const handleMove = (ev: PointerEvent) => {
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        let nx = origX + dx;
+        let ny = origY + dy;
+
+        const snappedX = Math.abs(nx) < SNAP_THRESHOLD;
+        const snappedY = Math.abs(ny) < SNAP_THRESHOLD;
+        if (snappedX) nx = 0;
+        if (snappedY) ny = 0;
+
+        setGuide({ x: snappedX, y: snappedY });
+        setPos({ x: nx, y: ny });
+      };
+
+      const handleUp = () => {
+        setIsTransforming(false);
+        setGuide({ x: false, y: false });
+        window.removeEventListener("pointermove", handleMove);
+        window.removeEventListener("pointerup", handleUp);
+      };
+
+      window.addEventListener("pointermove", handleMove);
+      window.addEventListener("pointerup", handleUp);
+    },
+    [pos.x, pos.y],
+  );
+
+  const handleRotateStart = useCallback(
+    (e: React.PointerEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!frameRef.current) return;
+      setIsTransforming(true);
+
+      const rect = frameRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const startPointerAngle =
+        Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
+      const startRotation = rotation;
+
+      const handleMove = (ev: PointerEvent) => {
+        const angle =
+          Math.atan2(ev.clientY - cy, ev.clientX - cx) * (180 / Math.PI);
+        let next = startRotation + (angle - startPointerAngle);
+
+        // snap to the nearest 45° increment
+        const nearest = Math.round(next / 45) * 45;
+        if (Math.abs(next - nearest) < ROTATE_SNAP_THRESHOLD) next = nearest;
+
+        setRotation(Math.round(next));
+      };
+
+      const handleUp = () => {
+        setIsTransforming(false);
+        window.removeEventListener("pointermove", handleMove);
+        window.removeEventListener("pointerup", handleUp);
+      };
+
+      window.addEventListener("pointermove", handleMove);
+      window.addEventListener("pointerup", handleUp);
+    },
+    [rotation],
+  );
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (contentMode === "code") {
+        onRemoveCode();
+        toast.success("Code snippet removed");
+      } else {
+        onRemoveImage();
+        toast.success("Image removed");
+      }
+      resetTransform();
+    },
+    [contentMode, onRemoveCode, onRemoveImage, resetTransform],
+  );
 
   useEffect(() => {
     if (!viewportRef.current) return;
@@ -150,6 +292,38 @@ export default function Canvas({
     [onImage],
   );
 
+  // Capture a screenshot of the entered website URL via /api/screenshot
+  // (backed by SnapRender) and load it into the canvas as the content image.
+  const handleCapture = useCallback(async () => {
+    const raw = url.trim();
+    if (!raw) {
+      toast.error("Enter a website URL first");
+      return;
+    }
+    if (capturing) return;
+
+    const target = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+    setCapturing(true);
+    try {
+      const res = await fetch(
+        `/api/screenshot?url=${encodeURIComponent(target)}`,
+      );
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.image) {
+        throw new Error(body?.error || `Screenshot failed (${res.status})`);
+      }
+      onImage(body.image);
+      toast.success("Website captured");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to capture website",
+      );
+    } finally {
+      setCapturing(false);
+    }
+  }, [url, capturing, onImage]);
+
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const item = Array.from(e.clipboardData?.items ?? []).find((i) =>
@@ -167,6 +341,9 @@ export default function Canvas({
   const contentIndex = layers.findIndex((l) => l.id === "content");
   const backgroundZ = layers.length - backgroundIndex;
   const contentZ = layers.length - contentIndex;
+
+  const hasSelectableContent =
+    (contentMode === "website" && !!image) || contentMode === "code";
 
   return (
     <div
@@ -223,20 +400,44 @@ export default function Canvas({
             padding: `${padding}%`,
             perspective: "1400px",
           }}
+          onPointerDown={(e) => {
+            // clicking empty canvas area deselects the frame
+            if (e.target === e.currentTarget) setSelected(false);
+          }}
         >
           {contentMode === "code" ? (
             <div
+              ref={frameRef}
+              onPointerDown={handleDragStart}
               className="relative w-full max-w-xl transition-transform duration-150"
               style={{
-                transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
-                transformStyle: "preserve-3d",
+                transform: `translate(${pos.x}px, ${pos.y}px) rotate(${rotation}deg)`,
+                transitionProperty: isTransforming ? "none" : undefined,
+                cursor: selected ? "grab" : "pointer",
               }}
             >
               <div
-                style={{ boxShadow: SHADOW_CSS[shadow], borderRadius: radius }}
+                style={{
+                  transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <CodeBlock snippet={codeSnippet} />
+                <div
+                  style={{
+                    boxShadow: SHADOW_CSS[shadow],
+                    borderRadius: radius,
+                  }}
+                >
+                  <CodeBlock snippet={codeSnippet} />
+                </div>
               </div>
+
+              {selected && !isExporting && (
+                <SelectionOverlay
+                  onRotateStart={handleRotateStart}
+                  onDelete={handleDelete}
+                />
+              )}
             </div>
           ) : !image ? (
             <div className="relative flex h-full w-full items-center justify-center">
@@ -301,41 +502,80 @@ export default function Canvas({
                   <input
                     value={url}
                     onChange={(e) => onUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !capturing) {
+                        e.preventDefault();
+                        handleCapture();
+                      }
+                    }}
                     placeholder="Enter website URL..."
-                    className="w-full bg-transparent text-xs text-white placeholder:text-white/40 outline-none"
+                    disabled={capturing}
+                    className="w-full bg-transparent text-xs text-white placeholder:text-white/40 outline-none disabled:opacity-60"
                   />
-                  <Camera size={14} className="shrink-0 text-white/60" />
+                  <button
+                    type="button"
+                    onClick={handleCapture}
+                    disabled={capturing}
+                    aria-label="Capture website"
+                    className="shrink-0 text-white/60 transition hover:text-white disabled:cursor-not-allowed"
+                  >
+                    {capturing ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Camera size={14} />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
           ) : (
             <div
+              ref={frameRef}
+              onPointerDown={handleDragStart}
               className="relative w-full max-w-xl transition-transform duration-150"
               style={{
-                transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
-                transformStyle: "preserve-3d",
+                transform: `translate(${pos.x}px, ${pos.y}px) rotate(${rotation}deg)`,
+                transitionProperty: isTransforming ? "none" : undefined,
+                cursor: selected ? "grab" : "pointer",
               }}
             >
               <div
-                style={{ boxShadow: SHADOW_CSS[shadow], borderRadius: radius }}
+                style={{
+                  transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <BrowserFrame
-                  style={frameStyle}
-                  url={url || "yoursite.com"}
-                  className="w-full"
-                  headerScale={headerSize}
-                  radius={radius}
+                <div
+                  style={{
+                    boxShadow: SHADOW_CSS[shadow],
+                    borderRadius: radius,
+                  }}
                 >
-                  <div
-                    className="relative h-full w-full bg-cover bg-center"
-                    style={{ backgroundImage: `url(${image})` }}
-                  />
-                </BrowserFrame>
+                  <BrowserFrame
+                    style={frameStyle}
+                    url={url || "yoursite.com"}
+                    className="w-full"
+                    headerScale={headerSize}
+                    radius={radius}
+                  >
+                    <div
+                      className="relative h-full w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${image})` }}
+                    />
+                  </BrowserFrame>
+                </div>
               </div>
+
+              {selected && !isExporting && (
+                <SelectionOverlay
+                  onRotateStart={handleRotateStart}
+                  onDelete={handleDelete}
+                />
+              )}
             </div>
           )}
 
-          {contentMode === "website" && image && !isExporting && (
+          {contentMode === "website" && image && !isExporting && !selected && (
             <div
               data-export-ignore="true"
               className="absolute bottom-4 right-4 flex items-center gap-2"
@@ -360,7 +600,7 @@ export default function Canvas({
             </div>
           )}
 
-          {contentMode === "code" && !isExporting && (
+          {contentMode === "code" && !isExporting && !selected && (
             <div
               data-export-ignore="true"
               className="absolute bottom-4 right-4 flex items-center gap-2"
@@ -378,6 +618,20 @@ export default function Canvas({
             </div>
           )}
         </div>
+
+        {/* Center snap guides — span the full canvas, shown while dragging */}
+        {hasSelectableContent && guide.x && (
+          <div
+            className="pointer-events-none absolute bottom-0 top-0 left-1/2 w-px -translate-x-1/2"
+            style={{ zIndex: layers.length + 2, backgroundColor: "#3b82f6" }}
+          />
+        )}
+        {hasSelectableContent && guide.y && (
+          <div
+            className="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2"
+            style={{ zIndex: layers.length + 2, backgroundColor: "#3b82f6" }}
+          />
+        )}
 
         {showGrid && (
           <div
@@ -399,6 +653,70 @@ export default function Canvas({
         className="hidden"
         onChange={(e) => readFile(e.target.files?.[0])}
       />
+    </div>
+  );
+}
+
+// Selection border, corner handles, and the floating rotate / delete toolbar.
+// Rendered as a child of the frame wrapper so it moves and rotates with it.
+function SelectionOverlay({
+  onRotateStart,
+  onDelete,
+}: {
+  onRotateStart: (e: React.PointerEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <div
+      data-export-ignore="true"
+      data-no-drag="true"
+      className="pointer-events-none absolute inset-0 z-50"
+    >
+      {/* selection border */}
+      <div
+        className="pointer-events-none absolute inset-0 rounded-md"
+        style={{ border: "2px solid #3b82f6" }}
+      />
+
+      {/* corner handles */}
+      <CornerHandle position="tl" />
+      <CornerHandle position="tr" />
+      <CornerHandle position="bl" />
+      <CornerHandle position="br" />
+
+      {/* connecting line up to the floating toolbar */}
+      <div
+        data-no-drag="true"
+        className="pointer-events-none absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 -translate-y-full"
+        style={{ backgroundColor: "#3b82f6" }}
+      />
+
+      {/* rotate + delete toolbar */}
+      <div
+        data-no-drag="true"
+        className="pointer-events-auto absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-[calc(100%+36px)] items-center gap-2"
+      >
+        <button
+          data-no-drag="true"
+          onPointerDown={onRotateStart}
+          title="Rotate"
+          aria-label="Rotate"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-blue-600 shadow-md active:cursor-grabbing"
+          style={{ cursor: "alias", border: "2px solid #3b82f6" }}
+        >
+          <RotateCw size={13} />
+        </button>
+        <button
+          data-no-drag="true"
+          onClick={onDelete}
+          title="Delete"
+          aria-label="Delete"
+          className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-red-400 bg-white text-red-500 shadow-md transition hover:bg-red-50"
+          style={{ cursor: "alias", border: "2px solid #3b82f6" }}
+        >
+          <X size={13} />
+        </button>
+      </div>
     </div>
   );
 }

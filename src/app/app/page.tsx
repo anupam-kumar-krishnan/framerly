@@ -2,7 +2,6 @@
 
 import { useCallback, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { toast } from "sonner";
 import TopBar from "@/components/editor/TopBar";
 import LeftPanel from "@/components/editor/LeftPanel";
 import Canvas from "@/components/editor/Canvas";
@@ -17,6 +16,7 @@ import {
   LayerItem,
   ShadowPreset,
 } from "@/components/editor/types";
+import { toast } from "sonner";
 
 export default function StudioPage() {
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
@@ -24,9 +24,8 @@ export default function StudioPage() {
   const [headerSize, setHeaderSize] = useState(100);
   const [shadow, setShadow] = useState<ShadowPreset>("soft");
   const [background, setBackground] = useState<BackgroundPreset>(
-    BACKGROUND_PRESETS[8],
+    BACKGROUND_PRESETS[0],
   );
-
   const [padding, setPadding] = useState(10);
   const [radius, setRadius] = useState(16);
   const [zoom, setZoom] = useState(100);
@@ -35,14 +34,10 @@ export default function StudioPage() {
   const [aspect, setAspect] = useState<AspectRatio>("4:3");
   const [image, setImage] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [layers, setLayers] = useState<LayerItem[]>([
-    { id: "content", label: "Content", visible: true },
-    { id: "background", label: "Background", visible: true },
-  ]);
 
   const [contentMode, setContentMode] = useState<ContentMode>("website");
   const [codeSnippet, setCodeSnippet] = useState<CodeSnippetState>({
-    code: `function greet(name) {\n  return \`Hello, Framely!\`;\n}`,
+    code: `function greet(name) {\n  return \`Hello, \${name}!\`;\n}`,
     language: "javascript",
     theme: "dracula",
     font: "JetBrains Mono",
@@ -51,6 +46,14 @@ export default function StudioPage() {
     showWindowChrome: true,
     compact: false,
   });
+
+  const [showRulers, setShowRulers] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
+
+  const [layers, setLayers] = useState<LayerItem[]>([
+    { id: "content", label: "Content", visible: true },
+    { id: "background", label: "Background", visible: true },
+  ]);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -69,15 +72,12 @@ export default function StudioPage() {
     }
   }, []);
 
-  const [showRulers, setShowRulers] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
-
   const handleReset = useCallback(() => {
     setFrameStyle("chrome-dark");
     setUrl("framerly.vercel.app");
     setHeaderSize(100);
     setShadow("soft");
-    setBackground(BACKGROUND_PRESETS[8]);
+    setBackground(BACKGROUND_PRESETS[0]);
     setPadding(10);
     setRadius(16);
     setZoom(100);
@@ -91,22 +91,6 @@ export default function StudioPage() {
       { id: "background", label: "Background", visible: true },
     ]);
   }, []);
-
-  const handleDeleteLayer = useCallback(
-    (id: LayerItem["id"]) => {
-      if (id === "content") {
-        if (contentMode === "code") {
-          setContentMode("website");
-        }
-        setImage(null);
-        toast.success("Content cleared");
-      } else if (id === "background") {
-        setBackground(BACKGROUND_PRESETS[8]);
-        toast.success("Background reset");
-      }
-    },
-    [contentMode],
-  );
 
   const handleSave = useCallback(async () => {
     const dataUrl = await exportPng();
@@ -130,6 +114,22 @@ export default function StudioPage() {
       // clipboard write can fail without permissions; silently ignore
     }
   }, [exportPng]);
+
+  const handleDeleteLayer = useCallback(
+    (id: LayerItem["id"]) => {
+      if (id === "content") {
+        if (contentMode === "code") {
+          setContentMode("website");
+        }
+        setImage(null);
+        toast.success("Content cleared");
+      } else if (id === "background") {
+        setBackground(BACKGROUND_PRESETS[8]);
+        toast.success("Background reset");
+      }
+    },
+    [contentMode],
+  );
 
   return (
     <div className="flex h-screen flex-col bg-void text-ink">
@@ -205,6 +205,16 @@ export default function StudioPage() {
             setTiltY(p.tiltY);
             setPadding(p.padding);
           }}
+          padding={padding}
+          background={background}
+          frameStyle={frameStyle}
+          url={url}
+          headerSize={headerSize}
+          shadow={shadow}
+          radius={radius}
+          image={image}
+          contentMode={contentMode}
+          codeSnippet={codeSnippet}
         />
       </div>
     </div>

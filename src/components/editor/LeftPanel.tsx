@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { SlidersHorizontal, Palette, Layers, ChevronDown } from "lucide-react";
+import {
+  SlidersHorizontal,
+  Palette,
+  Layers,
+  ChevronDown,
+  Shuffle,
+} from "lucide-react";
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
-import FakeScreen from "@/components/shared/FakeScreen";
 import { BACKGROUND_GROUPS, BackgroundPreset, ShadowPreset } from "./types";
 import { Code2 } from "lucide-react"; // add to your lucide-react import line
 import CodeSnippetPanel from "./CodeSnippetPanel";
@@ -24,6 +29,10 @@ const SHADOWS: { id: ShadowPreset; label: string }[] = [
   { id: "hard", label: "Hard" },
   { id: "long", label: "Long" },
 ];
+
+// Groups rendered as a 2-row, horizontally-scrolling strip instead of a
+// wrapping grid. Add/remove titles here to control which sections scroll.
+const SCROLLABLE_GROUPS = new Set(["Gradients", "Pattern"]);
 
 function Section({
   title,
@@ -47,16 +56,13 @@ function Section({
   );
 }
 
-function BackgroundGroupSection({
+// Chevron-style collapsible header, matching BackgroundGroupSection's look.
+function CollapsibleSection({
   title,
-  presets,
-  selectedId,
-  onSelect,
+  children,
 }: {
   title: string;
-  presets: BackgroundPreset[];
-  selectedId: string;
-  onSelect: (b: BackgroundPreset) => void;
+  children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(true);
   return (
@@ -71,32 +77,116 @@ function BackgroundGroupSection({
         />
         {title}
       </button>
-      {open && (
-        <div className="mt-3 grid grid-cols-4 gap-2.5">
-          {presets.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => onSelect(p)}
-              title={p.label}
-              aria-label={p.label}
-              className={`aspect-square rounded-xl border-2 transition ${
-                selectedId === p.id
-                  ? "border-amber"
-                  : "border-transparent hover:border-line"
-              }`}
-              style={
-                p.image
-                  ? {
-                      backgroundImage: `url(${p.image})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }
-                  : { background: p.css }
-              }
-            />
-          ))}
-        </div>
-      )}
+      {open && <div className="mt-3">{children}</div>}
+    </div>
+  );
+}
+
+function BackgroundGroupSection({
+  title,
+  presets,
+  selectedId,
+  onSelect,
+}: {
+  title: string;
+  presets: BackgroundPreset[];
+  selectedId: string;
+  onSelect: (b: BackgroundPreset) => void;
+}) {
+  const [open, setOpen] = useState(true);
+  const scrollable = SCROLLABLE_GROUPS.has(title);
+  const shufflable = title === "Gradients";
+
+  const handleShuffle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (presets.length === 0) return;
+    const choices =
+      presets.length > 1 ? presets.filter((p) => p.id !== selectedId) : presets;
+    const pick = choices[Math.floor(Math.random() * choices.length)];
+    onSelect(pick);
+  };
+
+  return (
+    <div className="border-b border-line-soft py-4 first:pt-0">
+      <div className="flex w-full items-center justify-between">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex flex-1 items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-ink-dim"
+        >
+          <ChevronDown
+            size={13}
+            className={`text-ink-faint transition-transform ${open ? "" : "-rotate-90"}`}
+          />
+          {title}
+        </button>
+        {shufflable && (
+          <button
+            onClick={handleShuffle}
+            title="Shuffle gradient"
+            aria-label="Shuffle gradient"
+            className="rounded-md p-1 text-ink-faint transition hover:text-ink hover:bg-panel-2"
+          >
+            <Shuffle size={13} />
+          </button>
+        )}
+      </div>
+      {open &&
+        (scrollable ? (
+          <div className="mt-3 -mx-4 px-4">
+            <div
+              className="grid grid-rows-2 grid-flow-col auto-cols-[56px] gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory scrollbar-none"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {presets.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => onSelect(p)}
+                  title={p.label}
+                  aria-label={p.label}
+                  className={`h-14 w-14 shrink-0 rounded-xl border-2 snap-start transition ${
+                    selectedId === p.id
+                      ? "border-amber"
+                      : "border-transparent hover:border-line"
+                  }`}
+                  style={
+                    p.image
+                      ? {
+                          backgroundImage: `url(${p.image})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : { background: p.css }
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 grid grid-cols-4 gap-2.5">
+            {presets.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onSelect(p)}
+                title={p.label}
+                aria-label={p.label}
+                className={`aspect-square rounded-xl border-2 transition ${
+                  selectedId === p.id
+                    ? "border-amber"
+                    : "border-transparent hover:border-line"
+                }`}
+                style={
+                  p.image
+                    ? {
+                        backgroundImage: `url(${p.image})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : { background: p.css }
+                }
+              />
+            ))}
+          </div>
+        ))}
     </div>
   );
 }
@@ -171,32 +261,47 @@ export default function LeftPanel({
       <div className="flex-1 overflow-y-auto scrollbar-none px-4 py-4">
         {tab === "design" && (
           <>
-            <Section title="Style">
+            <CollapsibleSection title="Style">
               <div className="grid grid-cols-2 gap-3">
-                {STYLES.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => onFrameStyle(s.id)}
-                    className={`overflow-hidden rounded-lg border-2 text-left transition ${
-                      frameStyle === s.id
-                        ? "border-amber"
-                        : "border-transparent hover:border-line"
-                    }`}
-                  >
-                    <div className="pointer-events-none scale-100">
-                      <BrowserFrame style={s.id} className="rounded-md">
-                        <FakeScreen
-                          tone={s.id.endsWith("dark") ? "amber" : "mono"}
-                        />
-                      </BrowserFrame>
-                    </div>
-                    <p className="mt-1.5 px-0.5 text-[11px] text-ink-dim">
-                      {s.label}
-                    </p>
-                  </button>
-                ))}
+                {STYLES.map((s) => {
+                  const selected = frameStyle === s.id;
+                  const isDark = s.id.endsWith("dark");
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => onFrameStyle(s.id)}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <div
+                        className={`w-full overflow-hidden rounded-xl border transition ${
+                          selected
+                            ? "border-ink-dim"
+                            : "border-transparent hover:border-line"
+                        }`}
+                      >
+                        <div className="pointer-events-none">
+                          <BrowserFrame style={s.id} className="rounded-lg">
+                            <div
+                              className="h-14 w-full"
+                              style={{
+                                background: isDark ? "#242424" : "#ffffff",
+                              }}
+                            />
+                          </BrowserFrame>
+                        </div>
+                      </div>
+                      <p
+                        className={`text-[11px] transition ${
+                          selected ? "font-semibold text-ink" : "text-ink-dim"
+                        }`}
+                      >
+                        {s.label}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
-            </Section>
+            </CollapsibleSection>
 
             <Section title="URL">
               <input
