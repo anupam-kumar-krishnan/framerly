@@ -75,7 +75,7 @@ export default function StudioPage() {
 
   const handleReset = useCallback(() => {
     setFrameStyle("chrome-dark");
-    setUrl("framerly.vercel.app");
+    setUrl("https://framerly-shot.vercel.app");
     setPageTheme("dark");
     setHeaderSize(100);
     setShadow("soft");

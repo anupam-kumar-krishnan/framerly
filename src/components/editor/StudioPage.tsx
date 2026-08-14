@@ -23,7 +23,7 @@ import { PageTheme } from "./types";
 
 export default function StudioPage() {
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
-  const [url, setUrl] = useState("framerly.vercel.app");
+  const [url, setUrl] = useState("https://framerly-shot.vercel.app");
   const [headerSize, setHeaderSize] = useState(100);
   const [shadow, setShadow] = useState<ShadowPreset>("soft");
   const [background, setBackground] = useState<BackgroundPreset>(
@@ -78,7 +78,7 @@ export default function StudioPage() {
 
   const handleReset = useCallback(() => {
     setFrameStyle("chrome-dark");
-    setUrl("framerly.vercel.app");
+    setUrl("https://framerly-shot.vercel.app");
     setHeaderSize(100);
     setShadow("soft");
     setBackground(getBackgroundById(DEFAULT_BACKGROUND_ID));
