@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 export default function StudioPage() {
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
-  const [url, setUrl] = useState("framerly.vercel.app");
+  const [url, setUrl] = useState("https://framerly-shot.vercel.app");
   const [pageTheme, setPageTheme] = useState<PageTheme>("dark");
   const [headerSize, setHeaderSize] = useState(100);
   const [shadow, setShadow] = useState<ShadowPreset>("soft");
