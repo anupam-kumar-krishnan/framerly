@@ -1,32 +1,27 @@
  <img width="1600" height="400" alt="framerly-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
 
 
-<h1 align="center"><i>📸 Framerly</i></h1>
+<h1>📸 Framerly - <a href="https://framerly-shot.vercel.app/"><b>🌐 Live Demo</b></a></h1>
 
-<p align="center">
-  <b>Plain screenshots walk into the studio. Portfolio shots walk out.</b>
-</p>
+<b>Plain screenshots walk into the studio. Portfolio shots walk out.</b>
 
-<p align="center">
-  <a href="https://framerly-shot.vercel.app/"><b>🌐 Live Demo</b></a>
-</p>
+<p>Framerly takes any screenshot and wraps it in a browser or device frame, sets the backdrop, casts the shadow, and hands back a polished image ready for your landing page, deck, or tweet.</p>
 
-<p align="center">
+---
+
   <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=dark"><img alt="Language · TypeScript" src="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=light"></picture>
   <img alt="Framework · Next.js" src="https://www.shieldcn.dev/badge/Framework-Next.js-000000.svg?logo=nextdotjs&variant=branded&mode=light" />
   <img alt="Stack · React" src="https://www.shieldcn.dev/badge/Stack-React-61DAFB.svg?logo=react&variant=branded&mode=light" />
   <img alt="Stack · Tailwind CSS" src="https://www.shieldcn.dev/badge/Stack-Tailwind_CSS-06B6D4.svg?logo=tailwindcss&variant=branded&mode=light" />
   <img alt="Lint · ESLint" src="https://www.shieldcn.dev/badge/Lint-ESLint-4B32C3.svg?logo=eslint&variant=branded&mode=light" />
   <a href="https://github.com/anupam-kumar-krishnan/framerly/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/anupam-kumar-krishnan/framerly?style=social" /></a>
-</p>
 
----
 
-Framerly takes any screenshot and wraps it in a browser or device frame, sets the backdrop, casts the shadow, and hands back a polished image ready for your landing page, deck, or tweet.
 
 ## Table of Contents
 
 - [Features](#features)
+- [Sample](#sample)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [How It Works](#how-it-works)
@@ -36,7 +31,6 @@ Framerly takes any screenshot and wraps it in a browser or device frame, sets th
 
 ## Features
 
-<<<<<<< HEAD
 - **Browser & device chrome** — Safari, Chrome, and bare frames, in light or dark, matched pixel-for-pixel to the real thing. <br>
 - **Backdrops that don't fight the shot** — gradient, solid, or image backgrounds tuned to sit behind your screenshot. <br>
 - **3D tilt and zoom** — angle the frame in space and dial the zoom until the composition feels intentional. <br>
@@ -47,15 +41,11 @@ Framerly takes any screenshot and wraps it in a browser or device frame, sets th
 - **75+ Backgrounds** — Choose from a curated library of backgrounds across multiple styles: Gradients, Patterns, macOS, Radial and Abstract. <br>
 - **Angle Preview** — Instantly preview your design from every angle before exporting. <br>
 - **Website Screenshot** — Generate a screenshot directly from a website link, no manual upload needed.
-=======
-- **Browser & device chrome** — Safari, Chrome, and bare frames, in light or dark, matched pixel-for-pixel to the real thing.
-- **Backdrops that don't fight the shot** — gradient, solid, or image backgrounds tuned to sit behind your screenshot.
-- **3D tilt and zoom** — angle the frame in space and dial the zoom until the composition feels intentional.
-- **Layered shadow and padding** — independent controls for shadow depth, corner radius, and canvas padding.
-- **Code snippet mode** — drop in a code block instead of a screenshot, with syntax themes, fonts, and window chrome.
-- **Layer management** — reorder and toggle visibility across everything on the canvas.
-- **Export at any size** — PNG, sized for a tweet, a deck slide, an App Store listing, or a 4K hero banner.
->>>>>>> 2b682a7d4bd535a5e641a0e83ba984d93b3cfe0f
+
+## Sample
+
+<img width="1536" height="1152" alt="framerly-shot-sample" src="https://github.com/user-attachments/assets/49f33480-e0e6-4422-b5dd-17c90187f18c" />
+
 
 ## Tech Stack
 
