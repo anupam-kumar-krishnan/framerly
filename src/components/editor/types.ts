@@ -535,3 +535,5 @@ export type LayerItem = {
   label: string;
   visible: boolean;
 };
+
+export type PageTheme = "light" | "dark";

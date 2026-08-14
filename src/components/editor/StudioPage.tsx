@@ -19,6 +19,7 @@ import {
   DEFAULT_BACKGROUND_ID,
 } from "@/components/editor/types";
 import { toast } from "sonner";
+import { PageTheme } from "./types";
 
 export default function StudioPage() {
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
@@ -51,6 +52,7 @@ export default function StudioPage() {
 
   const [showRulers, setShowRulers] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  const [pageTheme, setPageTheme] = useState<PageTheme>("light");
 
   const [layers, setLayers] = useState<LayerItem[]>([
     { id: "content", label: "Content", visible: true },
@@ -166,6 +168,8 @@ export default function StudioPage() {
           layers={layers}
           onLayers={setLayers}
           onDeleteLayer={handleDeleteLayer}
+          pageTheme={pageTheme}
+          onPageTheme={setPageTheme}
         />
         <Canvas
           frameStyle={frameStyle}
@@ -191,6 +195,7 @@ export default function StudioPage() {
           showRulers={showRulers}
           showGrid={showGrid}
           layers={layers}
+          pageTheme={pageTheme}
         />
         <RightPanel
           zoom={zoom}
