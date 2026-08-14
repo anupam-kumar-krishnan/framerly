@@ -1,6 +1,5 @@
  <img width="1600" height="400" alt="framerly-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
 
-
 <h1>📸 Framerly - <a href="https://framerly-shot.vercel.app/"><b>🌐 Live Demo</b></a></h1>
 
 <b>Plain screenshots walk into the studio. Portfolio shots walk out.</b>
@@ -9,14 +8,12 @@
 
 ---
 
-  <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=dark"><img alt="Language · TypeScript" src="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=light"></picture>
-  <img alt="Framework · Next.js" src="https://www.shieldcn.dev/badge/Framework-Next.js-000000.svg?logo=nextdotjs&variant=branded&mode=light" />
-  <img alt="Stack · React" src="https://www.shieldcn.dev/badge/Stack-React-61DAFB.svg?logo=react&variant=branded&mode=light" />
-  <img alt="Stack · Tailwind CSS" src="https://www.shieldcn.dev/badge/Stack-Tailwind_CSS-06B6D4.svg?logo=tailwindcss&variant=branded&mode=light" />
-  <img alt="Lint · ESLint" src="https://www.shieldcn.dev/badge/Lint-ESLint-4B32C3.svg?logo=eslint&variant=branded&mode=light" />
-  <a href="https://github.com/anupam-kumar-krishnan/framerly/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/anupam-kumar-krishnan/framerly?style=social" /></a>
-
-
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=dark"><img alt="Language · TypeScript" src="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=light"></picture>
+<img alt="Framework · Next.js" src="https://www.shieldcn.dev/badge/Framework-Next.js-000000.svg?logo=nextdotjs&variant=branded&mode=light" />
+<img alt="Stack · React" src="https://www.shieldcn.dev/badge/Stack-React-61DAFB.svg?logo=react&variant=branded&mode=light" />
+<img alt="Stack · Tailwind CSS" src="https://www.shieldcn.dev/badge/Stack-Tailwind_CSS-06B6D4.svg?logo=tailwindcss&variant=branded&mode=light" />
+<img alt="Lint · ESLint" src="https://www.shieldcn.dev/badge/Lint-ESLint-4B32C3.svg?logo=eslint&variant=branded&mode=light" />
+<a href="https://github.com/anupam-kumar-krishnan/framerly/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/anupam-kumar-krishnan/framerly?style=social" /></a>
 
 ## Table of Contents
 
@@ -42,21 +39,24 @@
 - **Angle Preview** — Instantly preview your design from every angle before exporting. <br>
 - **Website Screenshot** — Generate a screenshot directly from a website link, no manual upload needed.
 
+## Studio
+
+![Studio](./public/studio.png)
+
 ## Sample
 
 <img width="1536" height="1152" alt="framerly-shot-sample" src="https://github.com/user-attachments/assets/49f33480-e0e6-4422-b5dd-17c90187f18c" />
 
-
 ## Tech Stack
 
-| Layer | Choice | Badge |
-|---|---|---|
-| Framework | [Next.js](https://nextjs.org/) | <img alt="Framework · Next.js" src="https://www.shieldcn.dev/badge/Next.js-000000.svg?logo=nextdotjs&variant=branded&mode=light" /> |
-| UI | [React](https://react.dev/) |   <img alt="Stack · React" src="https://www.shieldcn.dev/badge/React-61DAFB.svg?logo=react&variant=branded&mode=light" /> |
-| Styling | [Tailwind CSS](https://tailwindcss.com/) |   <img alt="Stack · Tailwind CSS" src="https://www.shieldcn.dev/badge/Tailwind_CSS-06B6D4.svg?logo=tailwindcss&variant=branded&mode=light" /> |
-| Language | [TypeScript](https://www.typescriptlang.org/) | <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=dark"><img alt="TypeScript" src="https://www.shieldcn.dev/badge/TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=light"></picture> |
-| Linting | [ESLint](https://eslint.org/) | <img alt="ESLint" src="https://www.shieldcn.dev/badge/ESLint-4B32C3.svg?logo=eslint&variant=branded&mode=light" /> |
-| Hosting | [Vercel](https://vercel.com/) | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/anupam-kumar-krishnan/framerly) |
+| Layer     | Choice                                        | Badge                                                                                                                                                                                                                                                                                                                         |
+| --------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework | [Next.js](https://nextjs.org/)                | <img alt="Framework · Next.js" src="https://www.shieldcn.dev/badge/Next.js-000000.svg?logo=nextdotjs&variant=branded&mode=light" />                                                                                                                                                                                           |
+| UI        | [React](https://react.dev/)                   | <img alt="Stack · React" src="https://www.shieldcn.dev/badge/React-61DAFB.svg?logo=react&variant=branded&mode=light" />                                                                                                                                                                                                       |
+| Styling   | [Tailwind CSS](https://tailwindcss.com/)      | <img alt="Stack · Tailwind CSS" src="https://www.shieldcn.dev/badge/Tailwind_CSS-06B6D4.svg?logo=tailwindcss&variant=branded&mode=light" />                                                                                                                                                                                   |
+| Language  | [TypeScript](https://www.typescriptlang.org/) | <picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/badge/Language-TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=dark"><img alt="TypeScript" src="https://www.shieldcn.dev/badge/TypeScript-3178C6.svg?logo=typescript&amp;variant=branded&amp;mode=light"></picture> |
+| Linting   | [ESLint](https://eslint.org/)                 | <img alt="ESLint" src="https://www.shieldcn.dev/badge/ESLint-4B32C3.svg?logo=eslint&variant=branded&mode=light" />                                                                                                                                                                                                            |
+| Hosting   | [Vercel](https://vercel.com/)                 | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/anupam-kumar-krishnan/framerly)                                                                                                                                                                             |
 
 ## Getting Started
 
@@ -106,15 +106,14 @@ Framerly is a standard Next.js app, so it deploys anywhere Next.js does. The liv
 
 ## Features In Progress
 
- - [ ] Additional device/browser chrome presets
- - [ ] Custom backdrop image uploads
- - [ ] Saved already created designs
- - [ ] Signup and Login
- - [ ] Video Animations with presets
- - [ ] Templates
+- [ ] Additional device/browser chrome presets
+- [ ] Custom backdrop image uploads
+- [ ] Saved already created designs
+- [ ] Signup and Login
+- [ ] Video Animations with presets
+- [ ] Templates
 
 Have an idea? [Open an issue](https://github.com/anupam-kumar-krishnan/framerly/issues).
-
 
 ---
 

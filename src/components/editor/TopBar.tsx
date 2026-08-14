@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ASPECTS, AspectRatio } from "./types";
+import ExportPanel, { ExportOptions } from "./ExportPanel";
 
 export default function TopBar({
   aspect,
@@ -28,7 +29,7 @@ export default function TopBar({
   aspect: AspectRatio;
   onAspect: (a: AspectRatio) => void;
   onCopy: () => void;
-  onSave: () => void;
+  onSave: (options: ExportOptions) => void;
   onReset: () => void;
   showRulers: boolean;
   onToggleRulers: () => void;
@@ -36,6 +37,7 @@ export default function TopBar({
   onToggleGrid: () => void;
 }) {
   const [aspectOpen, setAspectOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   return (
@@ -124,13 +126,26 @@ export default function TopBar({
           )}
           {copied ? "Copied" : "Copy"}
         </button>
-        <button
-          onClick={onSave}
-          className="flex items-center gap-1.5 rounded-md bg-amber px-3.5 py-1.5 text-xs font-medium text-amber-ink transition hover:bg-amber-soft"
-        >
-          <Download size={13} />
-          Save
-        </button>
+
+        <div className="relative">
+          <button
+            onClick={() => setExportOpen((v) => !v)}
+            className="flex items-center gap-1.5 rounded-md bg-amber px-3.5 py-1.5 text-xs font-medium text-amber-ink transition hover:bg-amber-soft"
+          >
+            <Download size={13} />
+            Save
+          </button>
+
+          {exportOpen && (
+            <ExportPanel
+              onExport={(options) => {
+                onSave(options);
+                setExportOpen(false);
+              }}
+              onClose={() => setExportOpen(false)}
+            />
+          )}
+        </div>
       </div>
     </header>
   );
