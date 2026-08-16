@@ -11,7 +11,13 @@ export type BackgroundPreset = {
 
 export type AspectRatio = "16:9" | "4:3" | "1:1" | "9:16" | "3:2";
 
+// The physical mockup wrapped around the content. "browser" defers to
+// BrowserFrame's own FrameStyle (Safari/Chrome, light/dark) for its chrome;
+// the others render as standalone device frames with no sub-style.
+export type DeviceType = "browser" | "iphone" | "macbook" | "glass" | "none";
+
 export type EditorState = {
+  device: DeviceType;
   frameStyle: FrameStyle;
   url: string;
   headerSize: number; // percent
@@ -460,6 +466,9 @@ export function getBackgroundById(id: string): BackgroundPreset {
 }
 
 export const DEFAULT_BACKGROUND_ID = "pattern-peach-clouds";
+
+// Default device shown when the editor first loads / a new canvas is created.
+export const DEFAULT_DEVICE: DeviceType = "browser";
 
 export const ASPECTS: Record<AspectRatio, number> = {
   "16:9": 16 / 9,

@@ -11,7 +11,8 @@ import {
   Trash2Icon,
   X,
 } from "lucide-react";
-import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
+import { FrameStyle } from "@/components/shared/BrowserFrame";
+import DeviceFrame from "@/components/shared/DeviceFrame";
 import CodeBlock from "./CodeBlock";
 import {
   ASPECTS,
@@ -19,6 +20,7 @@ import {
   BackgroundPreset,
   CodeSnippetState,
   ContentMode,
+  DeviceType,
   LayerItem,
   SHADOW_CSS,
   ShadowPreset,
@@ -103,6 +105,7 @@ function CornerHandle({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
 }
 
 export default function Canvas({
+  device,
   frameStyle,
   url,
   onUrl,
@@ -128,6 +131,7 @@ export default function Canvas({
   layers,
   pageTheme,
 }: {
+  device: DeviceType;
   frameStyle: FrameStyle;
   url: string;
   onUrl: (u: string) => void;
@@ -568,8 +572,9 @@ export default function Canvas({
                     borderRadius: radius,
                   }}
                 >
-                  <BrowserFrame
-                    style={frameStyle}
+                  <DeviceFrame
+                    device={device}
+                    browserStyle={frameStyle}
                     url={url || "yoursite.com"}
                     className="w-full"
                     headerScale={headerSize}
@@ -579,7 +584,7 @@ export default function Canvas({
                       className="relative h-full w-full bg-cover bg-center"
                       style={{ backgroundImage: `url(${image})` }}
                     />
-                  </BrowserFrame>
+                  </DeviceFrame>
                 </div>
               </div>
 

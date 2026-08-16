@@ -9,14 +9,34 @@ import {
   Shuffle,
   Sun,
   Moon,
+  Smartphone,
+  Laptop,
+  Globe,
+  Sparkles,
+  Square,
 } from "lucide-react";
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
-import { BACKGROUND_GROUPS, BackgroundPreset, ShadowPreset } from "./types";
+import DeviceFrame from "@/components/shared/DeviceFrame";
+import FakeScreen from "@/components/shared/FakeScreen"; // adjust path to match your project
+import {
+  BACKGROUND_GROUPS,
+  BackgroundPreset,
+  ShadowPreset,
+  DeviceType,
+} from "./types";
 import { Code2 } from "lucide-react"; // add to your lucide-react import line
 import CodeSnippetPanel from "./CodeSnippetPanel";
 import { CodeSnippetState } from "./types";
 import { LayerItem } from "./types";
 import LayersPanel from "./LayersPanel";
+
+const DEVICES: { id: DeviceType; label: string; icon: typeof Smartphone }[] = [
+  { id: "none", label: "None", icon: Square },
+  { id: "browser", label: "Browser", icon: Globe },
+  { id: "macbook", label: "MacBook", icon: Laptop },
+  { id: "iphone", label: "iPhone", icon: Smartphone },
+  { id: "glass", label: "Glass", icon: Sparkles },
+];
 
 const STYLES: { id: FrameStyle; label: string }[] = [
   { id: "safari-light", label: "Safari" },
@@ -197,7 +217,103 @@ function BackgroundGroupSection({
   );
 }
 
+// Height (in CSS px) each device's outer frame renders at when built full
+// size, before being scaled down for the thumbnail. Anything reasonable
+// works here — it just needs to roughly match each frame's real aspect
+// ratio so the transform-scale math below produces the right width.
+// NOTE: iphone now renders landscape (19.5:9) by default in DeviceFrame,
+// so this is sized to match that instead of the old tall 9:19.5 portrait
+// shape — otherwise this thumbnail would look squished/wrong.
+const THUMB_BASE_HEIGHT: Record<DeviceType, number> = {
+  browser: 150, // 16:10
+  none: 180, // 16:12 (bare)
+  macbook: 165, // 16:10 screen + base bar
+  iphone: 111, // 19.5:9 (landscape)
+  glass: 150, // 16:10
+};
+const THUMB_BASE_WIDTH: Record<DeviceType, number> = {
+  browser: 240,
+  none: 240,
+  macbook: 240,
+  iphone: 240,
+  glass: 240,
+};
+
+// Sidebar thumbnail for the Device section. Renders the *actual*
+// DeviceFrame at full size, then scales the whole thing down with a CSS
+// transform — so borders, the dynamic island, the MacBook hinge, etc. all
+// shrink proportionally instead of clipping/overlapping at small sizes.
+function DeviceCard({
+  deviceOption,
+  active,
+  browserStyle,
+  onSelect,
+}: {
+  deviceOption: { id: DeviceType; label: string; icon: typeof Smartphone };
+  active: boolean;
+  browserStyle: FrameStyle;
+  onSelect: (d: DeviceType) => void;
+}) {
+  const Icon = deviceOption.icon;
+  const boxHeight = 64; // fixed thumbnail box height, in px
+  const verticalPadding = 10; // px of breathing room top and bottom
+  const usableHeight = boxHeight - verticalPadding * 2;
+  const baseHeight = THUMB_BASE_HEIGHT[deviceOption.id];
+  const baseWidth = THUMB_BASE_WIDTH[deviceOption.id];
+  const scale = usableHeight / baseHeight;
+
+  return (
+    <button
+      onClick={() => onSelect(deviceOption.id)}
+      className="flex flex-col items-center gap-1.5"
+    >
+      <div
+        className={`flex w-full items-center justify-center overflow-hidden rounded-xl border bg-panel-2 transition ${
+          active ? "border-ink-dim" : "border-transparent hover:border-line"
+        }`}
+        style={{ height: boxHeight }}
+      >
+        <div
+          className="pointer-events-none shrink-0"
+          style={{
+            width: baseWidth * scale,
+            height: baseHeight * scale,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: baseWidth,
+              height: baseHeight,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            <DeviceFrame
+              device={deviceOption.id}
+              browserStyle={browserStyle}
+              className="h-full w-full"
+            >
+              <FakeScreen tone="mono" />
+            </DeviceFrame>
+          </div>
+        </div>
+      </div>
+      <p
+        className={`flex items-center gap-1 text-[11px] transition ${
+          active ? "font-semibold text-ink" : "text-ink-dim"
+        }`}
+      >
+        <Icon size={11} />
+        {deviceOption.label}
+      </p>
+    </button>
+  );
+}
+
 export default function LeftPanel({
+  device,
+  onDevice,
   frameStyle,
   onFrameStyle,
   url,
@@ -219,6 +335,8 @@ export default function LeftPanel({
   onLayers,
   onDeleteLayer,
 }: {
+  device: DeviceType;
+  onDevice: (d: DeviceType) => void;
   frameStyle: FrameStyle;
   onFrameStyle: (s: FrameStyle) => void;
   url: string;
@@ -271,6 +389,20 @@ export default function LeftPanel({
       <div className="flex-1 overflow-y-auto scrollbar-none px-4 py-4">
         {tab === "design" && (
           <>
+            <CollapsibleSection title="Device">
+              <div className="grid grid-cols-2 gap-3">
+                {DEVICES.map((d) => (
+                  <DeviceCard
+                    key={d.id}
+                    deviceOption={d}
+                    active={device === d.id}
+                    browserStyle={frameStyle}
+                    onSelect={onDevice}
+                  />
+                ))}
+              </div>
+            </CollapsibleSection>
+
             <CollapsibleSection title="Style">
               <div className="grid grid-cols-2 gap-3">
                 {STYLES.map((s) => {

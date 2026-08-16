@@ -2,12 +2,14 @@
 
 import { useRef, useState } from "react";
 import { ChevronDown, ChevronUp, PlayCircle, Shapes } from "lucide-react";
-import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
+import { FrameStyle } from "@/components/shared/BrowserFrame";
+import DeviceFrame from "@/components/shared/DeviceFrame";
 import CodeBlock from "./CodeBlock";
 import {
   BackgroundPreset,
   CodeSnippetState,
   ContentMode,
+  DeviceType,
   SHADOW_CSS,
   ShadowPreset,
 } from "./types";
@@ -71,6 +73,7 @@ function TiltPad({
   image,
   contentMode,
   codeSnippet,
+  device,
 }: {
   tiltX: number;
   tiltY: number;
@@ -86,6 +89,7 @@ function TiltPad({
   image: string | null;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
+  device: DeviceType;
 }) {
   const padRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -131,6 +135,7 @@ function TiltPad({
         image={image}
         contentMode={contentMode}
         codeSnippet={codeSnippet}
+        device={device}
         className="pointer-events-none absolute inset-0 rounded-none border-0"
       />
 
@@ -170,6 +175,7 @@ function MiniStage({
   image,
   contentMode,
   codeSnippet,
+  device,
   className = "",
 }: {
   zoom: number;
@@ -185,6 +191,7 @@ function MiniStage({
   image: string | null;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
+  device: DeviceType;
   className?: string;
 }) {
   // Clamp padding/radius so a preset with a large value doesn't overwhelm
@@ -233,8 +240,9 @@ function MiniStage({
               {contentMode === "code" ? (
                 <CodeBlock snippet={codeSnippet} />
               ) : (
-                <BrowserFrame
-                  style={frameStyle}
+                <DeviceFrame
+                  device={device}
+                  browserStyle={frameStyle}
                   url={url || "yoursite.com"}
                   className="w-full"
                   headerScale={headerSize}
@@ -244,7 +252,7 @@ function MiniStage({
                     className="relative h-full w-full bg-cover bg-center"
                     style={{ backgroundImage: `url(${image})` }}
                   />
-                </BrowserFrame>
+                </DeviceFrame>
               )}
             </div>
           </div>
@@ -271,6 +279,7 @@ export default function RightPanel({
   image,
   contentMode,
   codeSnippet,
+  device,
 }: {
   zoom: number;
   onZoom: (n: number) => void;
@@ -288,6 +297,7 @@ export default function RightPanel({
   image: string | null;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
+  device: DeviceType;
 }) {
   const [mode, setMode] = useState<"3d" | "flat">("3d");
   const [openGroup, setOpenGroup] = useState<string>("Popular");
@@ -302,6 +312,7 @@ export default function RightPanel({
     image,
     contentMode,
     codeSnippet,
+    device,
   };
 
   return (

@@ -13,12 +13,14 @@ import {
   BackgroundPreset,
   CodeSnippetState,
   ContentMode,
+  DeviceType,
   LayerItem,
   ShadowPreset,
 } from "@/components/editor/types";
 import { toast } from "sonner";
 
 export default function StudioPage() {
+  const [device, setDevice] = useState<DeviceType>("browser");
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
   const [url, setUrl] = useState("https://framerly-shot.vercel.app");
   const [pageTheme, setPageTheme] = useState<PageTheme>("dark");
@@ -74,6 +76,7 @@ export default function StudioPage() {
   }, []);
 
   const handleReset = useCallback(() => {
+    setDevice("browser");
     setFrameStyle("chrome-dark");
     setUrl("https://framerly-shot.vercel.app");
     setPageTheme("dark");
@@ -148,6 +151,8 @@ export default function StudioPage() {
       />
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
+          device={device}
+          onDevice={setDevice}
           frameStyle={frameStyle}
           onFrameStyle={setFrameStyle}
           url={url}
@@ -170,6 +175,7 @@ export default function StudioPage() {
           onDeleteLayer={handleDeleteLayer}
         />
         <Canvas
+          device={device}
           frameStyle={frameStyle}
           url={url}
           onUrl={setUrl}
@@ -220,6 +226,7 @@ export default function StudioPage() {
           image={image}
           contentMode={contentMode}
           codeSnippet={codeSnippet}
+          device={device}
         />
       </div>
     </div>

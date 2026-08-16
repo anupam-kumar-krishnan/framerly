@@ -13,15 +13,18 @@ import {
   BackgroundPreset,
   CodeSnippetState,
   ContentMode,
+  DeviceType,
   LayerItem,
   ShadowPreset,
   getBackgroundById,
   DEFAULT_BACKGROUND_ID,
+  DEFAULT_DEVICE,
 } from "@/components/editor/types";
 import { toast } from "sonner";
 import { PageTheme } from "./types";
 
 export default function StudioPage() {
+  const [device, setDevice] = useState<DeviceType>(DEFAULT_DEVICE);
   const [frameStyle, setFrameStyle] = useState<FrameStyle>("chrome-dark");
   const [url, setUrl] = useState("https://framerly-shot.vercel.app");
   const [headerSize, setHeaderSize] = useState(100);
@@ -77,6 +80,7 @@ export default function StudioPage() {
   }, []);
 
   const handleReset = useCallback(() => {
+    setDevice(DEFAULT_DEVICE);
     setFrameStyle("chrome-dark");
     setUrl("https://framerly-shot.vercel.app");
     setHeaderSize(100);
@@ -150,6 +154,8 @@ export default function StudioPage() {
       />
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
+          device={device}
+          onDevice={setDevice}
           frameStyle={frameStyle}
           onFrameStyle={setFrameStyle}
           url={url}
@@ -172,6 +178,7 @@ export default function StudioPage() {
           onPageTheme={setPageTheme}
         />
         <Canvas
+          device={device}
           frameStyle={frameStyle}
           url={url}
           onUrl={setUrl}
@@ -222,6 +229,7 @@ export default function StudioPage() {
           image={image}
           contentMode={contentMode}
           codeSnippet={codeSnippet}
+          device={device}
         />
       </div>
     </div>
