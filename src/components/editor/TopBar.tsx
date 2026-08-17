@@ -7,6 +7,8 @@ import {
   Copy,
   Download,
   RotateCcw,
+  Undo2,
+  Redo2,
   Ruler,
   Grid3x3,
   Check,
@@ -21,6 +23,10 @@ export default function TopBar({
   onCopy,
   onSave,
   onReset,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   showRulers,
   onToggleRulers,
   showGrid,
@@ -31,6 +37,10 @@ export default function TopBar({
   onCopy: () => void;
   onSave: (options: ExportOptions) => void;
   onReset: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   showRulers: boolean;
   onToggleRulers: () => void;
   showGrid: boolean;
@@ -88,6 +98,23 @@ export default function TopBar({
           className="flex h-7 w-7 items-center justify-center rounded-md text-ink-faint transition hover:bg-panel hover:text-ink"
         >
           <RotateCcw size={14} />
+        </button>
+        <span className="mx-0.5 h-4 w-px bg-line-soft" />
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
+          title="Undo"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-faint transition hover:bg-panel hover:text-ink disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-faint"
+        >
+          <Undo2 size={14} />
+        </button>
+        <button
+          onClick={onRedo}
+          disabled={!canRedo}
+          title="Redo"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-ink-faint transition hover:bg-panel hover:text-ink disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-faint"
+        >
+          <Redo2 size={14} />
         </button>
         <span className="mx-0.5 h-4 w-px bg-line-soft" />
         <button

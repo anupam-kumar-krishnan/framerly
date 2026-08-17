@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, PlayCircle, Shapes } from "lucide-react";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
 import DeviceFrame from "@/components/shared/DeviceFrame";
@@ -57,6 +57,14 @@ const GROUPS: { title: string; presets: Preset[] }[] = [
     presets: [{ label: "Hover", zoom: 86, tiltX: 10, tiltY: -6, padding: 20 }],
   },
 ];
+
+// NOTE: this must match the real pixel width your main/center canvas
+// renders the DeviceFrame/CodeBlock content at. If that width is dynamic
+// (e.g. measured via ResizeObserver on the main canvas), pass it down as
+// a prop instead of hardcoding — the two must never drift apart, or this
+// whole fix stops working.
+const CANVAS_REFERENCE_WIDTH = 860;
+const CANVAS_REFERENCE_HEIGHT = (CANVAS_REFERENCE_WIDTH * 3) / 4; // 4:3
 
 function TiltPad({
   tiltX,
@@ -161,6 +169,16 @@ function TiltPad({
 // at a given zoom/tilt/padding, so both the live preview and each preset
 // button can show what that setting actually looks like with the user's
 // real screenshot/code, background, and frame style.
+//
+// FIX: DeviceFrame/CodeBlock use fixed-pixel chrome (bezels, header height,
+// border widths) that doesn't shrink just because the container is small.
+// Previously we rendered them directly inside a small box, so bezels/headers
+// looked proportionally huge compared to the main canvas. Now we render the
+// content at the SAME real pixel size as the main canvas inside a hidden
+// full-size wrapper, then apply a single CSS `scale()` to the whole wrapper
+// based on how much smaller the visible box is. That scales every pixel
+// value (bezel, header, border, padding, radius) down in exact proportion,
+// just like shrinking a photo — so it matches the main canvas at any size.
 function MiniStage({
   zoom,
   tiltX,
@@ -194,15 +212,25 @@ function MiniStage({
   device: DeviceType;
   className?: string;
 }) {
-  // Clamp padding/radius so a preset with a large value doesn't overwhelm
-  // a small thumbnail; the live preview (larger box) still reads clearly.
-  const safePadding = Math.min(padding, 20);
-  const safeRadius = Math.min(radius, 14);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setScale(width / CANVAS_REFERENCE_WIDTH);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const hasContent = contentMode === "code" || !!image;
 
   return (
     <div
+      ref={wrapperRef}
       className={`relative aspect-4/3 w-full overflow-hidden rounded-lg border border-line bg-black ${className}`}
     >
       <div
@@ -217,47 +245,63 @@ function MiniStage({
             : { background: background.css }
         }
       />
-      <div
-        className="absolute inset-0 flex items-center justify-center"
-        style={{ padding: `${safePadding}%`, perspective: "900px" }}
-      >
-        {!hasContent ? (
-          <span className="text-[10px] text-white/40">No content yet</span>
-        ) : (
-          <div
-            className="w-full max-w-[220px]"
-            style={{
-              transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
-              transformStyle: "preserve-3d",
-            }}
-          >
+
+      {/* Hidden full-size stage, rendered at the real canvas's pixel
+          dimensions so every fixed-px value in DeviceFrame/CodeBlock is
+          identical to the main canvas. We then scale the whole thing down
+          uniformly to fit the visible (small) box. Until we've measured
+          the box (scale === 0) we don't render, to avoid a first-frame
+          flash at full size. */}
+      {scale > 0 && (
+        <div
+          className="absolute left-0 top-0 flex items-center justify-center"
+          style={{
+            width: CANVAS_REFERENCE_WIDTH,
+            height: CANVAS_REFERENCE_HEIGHT,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            padding: `${padding}%`,
+            perspective: "900px",
+          }}
+        >
+          {!hasContent ? (
+            <span className="text-sm text-white/40">No content yet</span>
+          ) : (
             <div
+              className="w-full max-w-[640px]"
               style={{
-                boxShadow: SHADOW_CSS[shadow],
-                borderRadius: safeRadius,
+                transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+                transformStyle: "preserve-3d",
               }}
             >
-              {contentMode === "code" ? (
-                <CodeBlock snippet={codeSnippet} />
-              ) : (
-                <DeviceFrame
-                  device={device}
-                  browserStyle={frameStyle}
-                  url={url || "yoursite.com"}
-                  className="w-full"
-                  headerScale={headerSize}
-                  radius={safeRadius}
-                >
-                  <div
-                    className="relative h-full w-full bg-cover bg-center"
-                    style={{ backgroundImage: `url(${image})` }}
-                  />
-                </DeviceFrame>
-              )}
+              <div
+                style={{
+                  boxShadow: SHADOW_CSS[shadow],
+                  borderRadius: radius,
+                }}
+              >
+                {contentMode === "code" ? (
+                  <CodeBlock snippet={codeSnippet} />
+                ) : (
+                  <DeviceFrame
+                    device={device}
+                    browserStyle={frameStyle}
+                    url={url || "yoursite.com"}
+                    className="w-full"
+                    headerScale={headerSize}
+                    radius={radius}
+                  >
+                    <div
+                      className="relative h-full w-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${image})` }}
+                    />
+                  </DeviceFrame>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
