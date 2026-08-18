@@ -5,6 +5,14 @@ import { ChevronDown, List, PanelTop, Minus } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { CODE_FONTS, CODE_LANGUAGES, CodeSnippetState } from "./types";
 
+// Fills the track behind the thumb, same look as the Header Size slider.
+function rangeFillStyle(value: number, min: number, max: number) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return {
+    background: `linear-gradient(to right, #9a9aa5 ${pct}%, #2a2a30 ${pct}%)`,
+  };
+}
+
 const THEME_OPTIONS: { id: CodeSnippetState["theme"]; label: string }[] = [
   { id: "dracula", label: "Dracula" },
   { id: "oneDark", label: "One Dark" },
@@ -146,12 +154,13 @@ export default function CodeSnippetPanel({
               value={snippet.fontSize || 14}
               onChange={(e) => patch({ fontSize: Number(e.target.value) })}
               className="w-full"
+              style={rangeFillStyle(snippet.fontSize || 14, 10, 28)}
             />
           </div>
 
-          <div className="overflow-hidden rounded-lg">
+          {/* <div className="overflow-hidden rounded-lg">
             <CodeBlock snippet={snippet} />
-          </div>
+          </div> */}
 
           <button
             onClick={onAddToCanvas}

@@ -8,7 +8,7 @@ import {
   okaidia,
   solarizedlight,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { CODE_THEME_BG, CodeSnippetState } from "./types";
+import { CODE_THEME_BG, CODE_FONT_FAMILY, CodeSnippetState } from "./types";
 
 const THEME_MAP: Record<
   CodeSnippetState["theme"],
@@ -34,6 +34,8 @@ export default function CodeBlock({ snippet }: { snippet: CodeSnippetState }) {
     compact,
   } = snippet;
 
+  const fontFamily = `${CODE_FONT_FAMILY[font] ?? `"${font}"`}, monospace`;
+
   return (
     <div
       className="overflow-hidden rounded-xl shadow-xl"
@@ -56,9 +58,10 @@ export default function CodeBlock({ snippet }: { snippet: CodeSnippetState }) {
           background: "transparent",
           fontSize: `${fontSize || 14}px`,
           lineHeight: 1.6,
+          fontFamily,
         }}
         codeTagProps={{
-          style: { fontFamily: `"${font}", monospace` },
+          style: { fontFamily },
         }}
       >
         {code || " "}

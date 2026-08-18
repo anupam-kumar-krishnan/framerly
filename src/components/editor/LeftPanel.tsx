@@ -60,6 +60,17 @@ export type PageTheme = "light" | "dark";
 // wrapping grid. Add/remove titles here to control which sections scroll.
 const SCROLLABLE_GROUPS = new Set(["Gradients", "Pattern"]);
 
+// Native range inputs don't paint a "how far along" fill on their own —
+// this computes that as a two-stop gradient (light gray up to the current
+// value, dark track after it) and gets applied as each input's own inline
+// background, so it moves live with the value on every change.
+function rangeFillStyle(value: number, min: number, max: number) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return {
+    background: `linear-gradient(to right, var(--ink-dim) ${pct}%, var(--line) ${pct}%)`,
+  };
+}
+
 function Section({
   title,
   children,
@@ -490,6 +501,7 @@ export default function LeftPanel({
                   value={headerSize}
                   onChange={(e) => onHeaderSize(Number(e.target.value))}
                   className="flex-1"
+                  style={rangeFillStyle(headerSize, 60, 140)}
                 />
                 <span className="w-10 text-right font-mono text-xs text-ink-dim">
                   {headerSize}%
@@ -506,6 +518,7 @@ export default function LeftPanel({
                   value={radius}
                   onChange={(e) => onRadius(Number(e.target.value))}
                   className="flex-1"
+                  style={rangeFillStyle(radius, 0, 48)}
                 />
                 <span className="w-10 text-right font-mono text-xs text-ink-dim">
                   {radius}px

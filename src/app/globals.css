@@ -30,7 +30,6 @@
   --color-amber-ink: var(--amber-ink);
   --color-slate: var(--slate);
   --color-success: var(--success);
-
 }
 
 /*
@@ -40,9 +39,12 @@
   the tokens below are named to match, so no other CSS needs to change.
 */
 :root {
-  --font-display: -apple-system, "Avenir Next", "Segoe UI Semibold", "Helvetica Neue", sans-serif;
+  --font-display:
+    -apple-system, "Avenir Next", "Segoe UI Semibold", "Helvetica Neue",
+    sans-serif;
   --font-body: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
 }
 
 html {
@@ -116,9 +118,9 @@ input[type="range"]::-webkit-slider-thumb {
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  background: var(--amber);
-  border: 2px solid var(--void);
-  box-shadow: 0 0 0 1px var(--amber);
+  background: #ffffff;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
 
@@ -126,9 +128,18 @@ input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  background: var(--amber);
-  border: 2px solid var(--void);
+  background: #ffffff;
+  border: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   cursor: pointer;
+}
+
+/* Firefox draws its own track behind the thumb; make it transparent so the
+   inline gradient fill (background set per-input in LeftPanel.tsx, based
+   on the current value) shows through the same way it does in Chrome/
+   Safari, instead of Firefox's flat --line track hiding it. */
+input[type="range"]::-moz-range-track {
+  background: transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {

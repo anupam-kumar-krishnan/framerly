@@ -537,6 +537,13 @@ export const CODE_FONTS = [
   "IBM Plex Mono",
 ];
 
+export const CODE_FONT_FAMILY: Record<string, string> = {
+  "JetBrains Mono": "var(--font-jetbrains-mono)",
+  "Fira Code": "var(--font-fira-code)",
+  "Source Code Pro": "var(--font-source-code-pro)",
+  "IBM Plex Mono": "var(--font-ibm-plex-mono)",
+};
+
 export type LayerId = "content" | "background";
 
 export type LayerItem = {
