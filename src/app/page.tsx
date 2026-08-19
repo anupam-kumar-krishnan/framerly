@@ -23,7 +23,7 @@ export default function Home() {
         <Features />
         <Steps />
         <StyleGallery />
-        <SocialProof />
+        {/* <SocialProof /> */}
         <CTA />
       </main>
       <Footer />
