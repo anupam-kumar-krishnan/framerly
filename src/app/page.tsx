@@ -5,6 +5,7 @@ import StyleGallery from "@/components/landing/StyleGallery";
 import SocialProof from "@/components/landing/SocialProof";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
+import MarqueeStrip from "@/components/landing/Marquee";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+        <MarqueeStrip />
         <Features />
         <StyleGallery />
         <SocialProof />

@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Bricolage_Grotesque } from "next/font/google";
+
+const displayFont = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display",
+});
 
 export default function CTA() {
   return (
@@ -12,7 +19,9 @@ export default function CTA() {
         }}
       />
       <div className="relative mx-auto max-w-3xl px-6 py-28 text-center">
-        <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-5xl">
+        <h2
+          className={`${displayFont.className} text-3xl font-semibold tracking-tight sm:text-5xl`}
+        >
           Your next <span className="text-amber-400">screenshot</span> deserves
           <br /> better <span className="text-amber-400">lighting.</span>
         </h2>

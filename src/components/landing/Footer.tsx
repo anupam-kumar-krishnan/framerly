@@ -9,7 +9,7 @@ export default function Footer() {
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-amber text-amber-ink">
             <Aperture size={15} strokeWidth={2.5} />
           </span>
-          <span className="font-display text-sm font-semibold">Framely</span>
+          <span className="font-display text-sm font-semibold">Framerly</span>
         </Link>
         <p className="text-xs text-ink-faint">
           © {new Date().getFullYear()} Framerly. Built for people who ship

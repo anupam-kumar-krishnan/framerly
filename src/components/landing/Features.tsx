@@ -1,80 +1,144 @@
-import {
-  Frame,
-  Layers,
-  Move3d,
-  Palette,
-  Download,
-  Webhook,
-} from "lucide-react";
+"use client";
 
-const features = [
-  {
-    icon: Frame,
-    title: "Browser & device chrome",
-    body: "Safari, Chrome, and bare device frames in light or dark, matched pixel for pixel to the real thing.",
-  },
-  {
-    icon: Palette,
-    title: "Backdrops that don't fight the shot",
-    body: "Gradient, solid, or image backgrounds tuned to sit behind your screenshot, not compete with it.",
-  },
-  {
-    icon: Move3d,
-    title: "3D tilt and zoom",
-    body: "Angle the frame in space and dial the zoom until the composition feels intentional, not centered by default.",
-  },
-  {
-    icon: Layers,
-    title: "Layered shadow and padding",
-    body: "Independent controls for shadow depth, corner radius, and canvas padding, so nothing looks pasted on.",
-  },
-  {
-    icon: Download,
-    title: "Export at any size",
-    body: "PNG or SVG, sized for a tweet, a deck slide, an App Store listing, or a 4K hero banner.",
-  },
-  {
-    icon: Webhook,
-    title: "API for repeat jobs",
-    body: "Generate the same framed shot for every release automatically, without opening the studio.",
-  },
-];
+import { motion, Variants } from "framer-motion";
+import { Frame, Palette, Layers, Download, Webhook } from "lucide-react";
+import { Bricolage_Grotesque } from "next/font/google";
 
-export default function Features() {
+const displayFont = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display",
+});
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 26 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.2, 0.8, 0.2, 1] },
+  },
+};
+
+export default function BentoFeatures() {
   return (
-    <section id="features" className="relative border-t border-line-soft">
-      <div className="mx-auto max-w-6xl px-6 py-24">
-        <div className="max-w-xl">
-          <span className="font-mono text-xs uppercase tracking-widest text-amber">
+    <section id="features" className="px-6 py-28">
+      <div className="mx-auto max-w-6xl">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeUp}
+          className="mb-14 max-w-lg"
+        >
+          <div className="mb-3 font-mono text-[12px] uppercase tracking-wider text-accent-2">
             In the studio
-          </span>
-          <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Every control a screenshot actually needs.
+          </div>
+          <h2
+            className={`${displayFont.className} font-display text-[32px] font-semibold leading-tight md:text-[38px]`}
+          >
+            Every control a <span className="text-amber-400">screenshot</span>{" "}
+            actually needs.
           </h2>
-          <p className="mt-4 text-ink-dim">
+          <p className="mt-3 text-[15px] text-text-dim">
             Nothing you won&apos;t use. Nothing you have to fight to find.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="group relative bg-panel p-7 transition hover:bg-panel-2"
-            >
-              <div className="inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-amber to-amber-soft p-2.5 shadow-[0_4px_12px_rgba(232,163,61,0.4),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.15)] transition group-hover:scale-110">
-                <f.icon size={20} className="text-panel" strokeWidth={2.25} />
-              </div>
-              <h3 className="mt-5 font-display text-base font-semibold">
-                {f.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-dim">
-                {f.body}
-              </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+          {/* large tile: live tilt demo */}
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={fadeUp}
+            className="group relative col-span-1 row-span-2 overflow-hidden rounded-2xl border border-border bg-surface p-7 md:col-span-3"
+          >
+            <div className="mb-5 flex h-9 w-9 items-center justify-center rounded-lg bg-grad-accent text-[#160c04]">
+              <Frame size={18} strokeWidth={2.4} />
             </div>
-          ))}
+            <h3 className="text-[17px] font-semibold">3D tilt and zoom</h3>
+            <p className="mt-2 max-w-xs text-[13.5px] leading-relaxed text-text-dim">
+              Angle the frame in space and dial the zoom until the composition
+              feels intentional, not centered by default.
+            </p>
+            <div className="mt-8 flex items-center justify-center perspective-[900px]">
+              <motion.div
+                animate={{ rotateY: [-14, 14, -14], rotateX: [6, -4, 6] }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                style={{ transformStyle: "preserve-3d" }}
+                className="h-40 w-64 rounded-xl bg-grad-studio shadow-2xl shadow-black/60"
+              >
+                <div className="flex h-full w-full flex-col justify-between rounded-xl border border-white/15 p-4">
+                  <div className="flex gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-white/60" />
+                    <span className="h-2 w-2 rounded-full bg-white/60" />
+                    <span className="h-2 w-2 rounded-full bg-white/60" />
+                  </div>
+                  <div className="h-16 self-end w-24 rounded-md bg-white/25 backdrop-blur" />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          <FeatureTile
+            icon={<Palette size={17} strokeWidth={2.4} />}
+            title="Backdrops that don't fight the shot"
+            desc="Gradient, solid, or image backgrounds tuned to sit behind your screenshot, not compete with it."
+            className="md:col-span-3"
+          />
+          <FeatureTile
+            icon={<Layers size={17} strokeWidth={2.4} />}
+            title="Layered shadow and padding"
+            desc="Independent controls for shadow depth, corner radius, and canvas padding."
+            className="md:col-span-3"
+          />
+          <FeatureTile
+            icon={<Download size={17} strokeWidth={2.4} />}
+            title="Export at any size"
+            desc="PNG or SVG, sized for a tweet, a deck slide, or a 4K hero banner."
+            className="md:col-span-2"
+          />
+          <FeatureTile
+            icon={<Webhook size={17} strokeWidth={2.4} />}
+            title="API for repeat jobs"
+            desc="Generate the same framed shot for every release automatically."
+            className="md:col-span-4"
+          />
         </div>
       </div>
     </section>
+  );
+}
+
+function FeatureTile({
+  icon,
+  title,
+  desc,
+  className = "",
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.3 }}
+      variants={fadeUp}
+      whileHover={{ y: -4 }}
+      className={`rounded-2xl border border-border bg-surface p-6 transition-colors hover:bg-surface-2 ${className}`}
+    >
+      <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-grad-accent text-[#160c04]">
+        {icon}
+      </div>
+      <h3 className="text-[15.5px] font-semibold">{title}</h3>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-text-dim">{desc}</p>
+    </motion.div>
   );
 }

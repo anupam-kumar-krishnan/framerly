@@ -1,5 +1,71 @@
 @import "tailwindcss";
 
+@theme {
+  /* Colors */
+  --color-bg: #0a090c;
+  --color-bg-soft: #100e12;
+  --color-surface: #161318;
+  --color-surface-2: #1d1a21;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-text: #f4f0e8;
+  --color-text-dim: #9c97a3;
+  --color-text-dimmer: #6a6674;
+  --color-accent: #ff8a3d;
+  --color-accent-2: #ffc24b;
+  --color-pink: #f0568c;
+  --color-purple: #9b6bf2;
+  --color-blue: #5b8def;
+
+  /* Font Families */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* Background Images */
+  --background-image-grad-accent: linear-gradient(90deg, #ff8a3d, #ffc24b);
+  --background-image-grad-studio: linear-gradient(
+    135deg,
+    #ffe066,
+    #ffc24b 50%,
+    #ff8a3d
+  );
+
+  /* Animations & Keyframes */
+  --animate-marquee: marquee 26s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-breathe: breathe 7s ease-in-out infinite;
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.28;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.42;
+      transform: scale(1.04);
+    }
+  }
+}
+
 :root {
   --void: #0c0d10;
   --panel: #16171b;
