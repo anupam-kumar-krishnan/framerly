@@ -10,8 +10,16 @@ import {
   Grid3x3,
   Copy,
   Download,
+  Zap,
+  Lock,
 } from "lucide-react";
 import { Bricolage_Grotesque } from "next/font/google";
+
+const badges = [
+  { icon: Zap, label: "Free — no sign-up" },
+  { icon: Lock, label: "100% in your browser" },
+  { icon: Download, label: "Retina PNG, JPG & SVG" },
+];
 
 const displayFont = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -110,14 +118,22 @@ export default function Hero() {
           </motion.a>
         </motion.div>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-5 text-[13px] text-text-dimmer"
+          className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
         >
-          No account needed to try it · Free for up to 20 exports a month
-        </motion.p>
+          {badges.map(({ icon: Icon, label }) => (
+            <span
+              key={label}
+              className="flex items-center gap-1.5 text-[13px] text-white"
+            >
+              <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+              {label}
+            </span>
+          ))}
+        </motion.div>
       </div>
 
       {/* product screenshot, front and center */}

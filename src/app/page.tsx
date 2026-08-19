@@ -6,6 +6,8 @@ import SocialProof from "@/components/landing/SocialProof";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 import MarqueeStrip from "@/components/landing/Marquee";
+import Difference from "@/components/landing/Difference";
+import Steps from "@/components/landing/Steps";
 
 export default function Home() {
   return (
@@ -14,7 +16,12 @@ export default function Home() {
       <main>
         <Hero />
         <MarqueeStrip />
+        <Difference
+          beforeSrc="/rain-jukebox.png"
+          afterSrc="/rain-jukebox-framerly.png"
+        />
         <Features />
+        <Steps />
         <StyleGallery />
         <SocialProof />
         <CTA />
