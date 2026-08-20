@@ -1,4 +1,4 @@
- <img width="1600" height="400" alt="framerly-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
+<img width="1899" height="875" alt="image" src="https://github.com/user-attachments/assets/e9913048-466b-4ec1-84b6-eac44372567b" />
 
 <h1>📸 Framerly - <a href="https://framerly-shot.vercel.app/"><b>🌐 Live Demo</b></a></h1>
 
@@ -38,6 +38,10 @@
 - **75+ Backgrounds** — Choose from a curated library of backgrounds across multiple styles: Gradients, Patterns, macOS, Radial and Abstract. <br>
 - **Angle Preview** — Instantly preview your design from every angle before exporting. <br>
 - **Website Screenshot** — Generate a screenshot directly from a website link, no manual upload needed.
+
+<img width="1895" height="792" alt="image" src="https://github.com/user-attachments/assets/b6a23d7c-b6c2-4a93-b64e-179cfd99b18b" />
+<img width="1894" height="794" alt="image" src="https://github.com/user-attachments/assets/c4f67c3b-e718-49ab-901d-a06c228b73da" />
+
 
 ## Studio
 
