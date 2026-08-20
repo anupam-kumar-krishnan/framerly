@@ -8,6 +8,8 @@ import Footer from "@/components/landing/Footer";
 import MarqueeStrip from "@/components/landing/Marquee";
 import Difference from "@/components/landing/Difference";
 import Steps from "@/components/landing/Steps";
+import BackgroundsSection from "@/components/landing/Backgrounds";
+import MockupsSection from "@/components/landing/Mockups";
 
 export default function Home() {
   return (
@@ -20,9 +22,11 @@ export default function Home() {
           beforeSrc="/rain-jukebox.png"
           afterSrc="/rain-jukebox-framerly.png"
         />
+        <BackgroundsSection />
+        <MockupsSection />
         <Features />
         <Steps />
-        <StyleGallery />
+        {/* <StyleGallery /> */}
         {/* <SocialProof /> */}
         <CTA />
       </main>

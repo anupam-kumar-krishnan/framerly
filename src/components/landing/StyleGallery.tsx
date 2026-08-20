@@ -61,7 +61,7 @@ export default function StyleGallery() {
             transition={{ duration: 0.6 }}
           >
             <div className="mb-3 font-mono text-[12px] uppercase tracking-wider text-accent-2">
-              Contact sheet
+              Frames
             </div>
             <h2
               className={`${displayFont.className} font-display text-[28px] font-semibold md:text-[34px]`}

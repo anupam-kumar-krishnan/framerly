@@ -33,12 +33,6 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             href="/app"
-            className="hidden text-sm text-ink-dim transition hover:text-ink sm:block"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/app"
             className="rounded-full bg-amber px-4 py-2 text-sm font-medium text-amber-ink transition hover:bg-amber-soft"
           >
             Open studio

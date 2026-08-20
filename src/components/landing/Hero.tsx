@@ -61,13 +61,27 @@ export default function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border-strong bg-surface px-3.5 py-1.5 font-mono text-[12px] text-accent-2"
+          className="relative mx-auto mb-6 inline-flex rounded-full p-[1px] overflow-hidden"
         >
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-          </span>
-          New Angle Unlocked
+          {/* running border — oversized square that rotates, clipped by the static pill above */}
+          <motion.span
+            aria-hidden
+            className="absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2"
+            style={{
+              background:
+                "conic-gradient(from 0deg, transparent 0deg, transparent 260deg, rgba(251,191,36,0.9) 300deg, #fbbf24 330deg, transparent 360deg)",
+            }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+          />
+
+          <div className="relative inline-flex items-center gap-2 rounded-full border border-border-strong bg-surface px-3.5 py-1.5 font-mono text-[12px] text-accent-2">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+            </span>
+            New Angle Unlocked
+          </div>
         </motion.div>
 
         <motion.h1

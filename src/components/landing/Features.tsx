@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
-import { Frame, Palette, Layers, Download, Webhook } from "lucide-react";
+import { Frame, Palette, Layers, Download, Link2 } from "lucide-react";
 import { Bricolage_Grotesque } from "next/font/google";
 
 const displayFont = Bricolage_Grotesque({
@@ -103,9 +103,9 @@ export default function BentoFeatures() {
             className="md:col-span-2"
           />
           <FeatureTile
-            icon={<Webhook size={17} strokeWidth={2.4} />}
-            title="API for repeat jobs"
-            desc="Generate the same framed shot for every release automatically."
+            icon={<Link2 size={17} strokeWidth={2.4} />}
+            title="Link to capture screenshot through link"
+            desc="Generate screenshot using product link with option to change theme dark/light"
             className="md:col-span-4"
           />
         </div>
