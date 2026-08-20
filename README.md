@@ -45,7 +45,8 @@
 
 ## Studio
 
-![Studio](./public/studio.png)
+<img width="1919" height="880" alt="image" src="https://github.com/user-attachments/assets/7eb664d0-8355-4617-a192-16c7e773c503" />
+
 
 ## Sample
 
