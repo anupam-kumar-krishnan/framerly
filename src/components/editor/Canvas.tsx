@@ -30,8 +30,8 @@ import { PageTheme } from "./LeftPanel";
 
 const RULER_SIZE = 20;
 const TICK_GAP = 50;
-const SNAP_THRESHOLD = 6; // px
-const ROTATE_SNAP_THRESHOLD = 4; // deg, snaps to multiples of 45
+const SNAP_THRESHOLD = 6;
+const ROTATE_SNAP_THRESHOLD = 4;
 
 const IPHONE_OUTER_RADIUS = "10% / 20%";
 
@@ -88,7 +88,6 @@ function Ruler({
   );
 }
 
-// Small square handle rendered at each corner of the selection box.
 function CornerHandle({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
   const posClass = {
     tl: "-left-1.5 -top-1.5 cursor-nwse-resize",
@@ -244,7 +243,6 @@ export default function Canvas({
           Math.atan2(ev.clientY - cy, ev.clientX - cx) * (180 / Math.PI);
         let next = startRotation + (angle - startPointerAngle);
 
-        // snap to the nearest 45° increment
         const nearest = Math.round(next / 45) * 45;
         if (Math.abs(next - nearest) < ROTATE_SNAP_THRESHOLD) next = nearest;
 
@@ -421,7 +419,6 @@ export default function Canvas({
             perspective: "1400px",
           }}
           onPointerDown={(e) => {
-            // clicking empty canvas area deselects the frame
             if (e.target === e.currentTarget) setSelected(false);
           }}
         >

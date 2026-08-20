@@ -103,8 +103,8 @@ function TiltPad({
     const rect = pad.getBoundingClientRect();
     const px = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     const py = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
-    const x = (py - 0.5) * -40; // tiltX range -20..20
-    const y = (px - 0.5) * 40; // tiltY range -20..20
+    const x = (py - 0.5) * -40; 
+    const y = (px - 0.5) * 40; 
     onChange(Math.round(x), Math.round(y));
   };
 

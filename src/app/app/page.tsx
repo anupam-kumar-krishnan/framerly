@@ -18,6 +18,7 @@ import {
   ShadowPreset,
 } from "@/components/editor/types";
 import { toast } from "sonner";
+import MobileStudioNotice from "@/components/shared/MobileStudioNotice";
 
 type EditorState = {
   device: DeviceType;
@@ -224,9 +225,7 @@ export default function StudioPage() {
       await navigator.clipboard.write([
         new ClipboardItem({ [blob.type]: blob }),
       ]);
-    } catch {
-      // clipboard write can fail without permissions; silently ignore
-    }
+    } catch {}
   }, [exportPng]);
 
   const handleDeleteLayer = useCallback(
@@ -247,102 +246,108 @@ export default function StudioPage() {
   );
 
   return (
-    <div className="flex h-screen flex-col bg-void text-ink">
-      <TopBar
-        aspect={state.aspect}
-        onAspect={(a) => updateState({ aspect: a })}
-        onCopy={handleCopy}
-        onSave={handleSave}
-        onReset={handleReset}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        showRulers={showRulers}
-        onToggleRulers={() => setShowRulers((v) => !v)}
-        showGrid={showGrid}
-        onToggleGrid={() => setShowGrid((v) => !v)}
-      />
-      <div className="flex flex-1 overflow-hidden">
-        <LeftPanel
-          device={state.device}
-          onDevice={(d) => updateState({ device: d })}
-          frameStyle={state.frameStyle}
-          onFrameStyle={(f) => updateState({ frameStyle: f })}
-          url={state.url}
-          onUrl={(u) => updateState({ url: u })}
-          pageTheme={state.pageTheme}
-          onPageTheme={(t) => updateState({ pageTheme: t })}
-          headerSize={state.headerSize}
-          onHeaderSize={(h) => updateState({ headerSize: h })}
-          shadow={state.shadow}
-          onShadow={(s) => updateState({ shadow: s })}
-          background={state.background}
-          onBackground={(b) => updateState({ background: b })}
-          radius={state.radius}
-          onRadius={(r) => updateState({ radius: r })}
-          codeSnippet={state.codeSnippet}
-          onCodeSnippet={(c) => updateState({ codeSnippet: c })}
-          onAddCodeToCanvas={() => updateState({ contentMode: "code" })}
-          layers={state.layers}
-          onLayers={(l) => updateState({ layers: l })}
-          onDeleteLayer={handleDeleteLayer}
-          mainImage={state.image}
-        />
-        <Canvas
-          device={state.device}
-          frameStyle={state.frameStyle}
-          url={state.url}
-          onUrl={(u) => updateState({ url: u })}
-          pageTheme={state.pageTheme}
-          headerSize={state.headerSize}
-          shadow={state.shadow}
-          background={state.background}
-          padding={state.padding}
-          radius={state.radius}
-          zoom={state.zoom}
-          tiltX={state.tiltX}
-          tiltY={state.tiltY}
-          aspect={state.aspect}
-          image={state.image}
-          onImage={(img) => updateState({ image: img })}
-          onRemoveImage={() => updateState({ image: null })}
-          canvasRef={canvasRef}
-          isExporting={isExporting}
-          contentMode={state.contentMode}
-          codeSnippet={state.codeSnippet}
-          onRemoveCode={() => updateState({ contentMode: "website" })}
-          showRulers={showRulers}
-          showGrid={showGrid}
-          layers={state.layers}
-        />
-        <RightPanel
-          zoom={state.zoom}
-          onZoom={(z) => updateState({ zoom: z })}
-          tiltX={state.tiltX}
-          tiltY={state.tiltY}
-          onTilt={(x, y) => updateState({ tiltX: x, tiltY: y })}
-          onPreset={(p) =>
-            updateState({
-              zoom: p.zoom,
-              tiltX: p.tiltX,
-              tiltY: p.tiltY,
-              padding: p.padding,
-            })
-          }
-          padding={state.padding}
-          background={state.background}
-          frameStyle={state.frameStyle}
-          url={state.url}
-          headerSize={state.headerSize}
-          shadow={state.shadow}
-          radius={state.radius}
-          image={state.image}
-          contentMode={state.contentMode}
-          codeSnippet={state.codeSnippet}
-          device={state.device}
-        />
+    <>
+      <div className="md:hidden">
+        <MobileStudioNotice />
       </div>
-    </div>
+
+      <div className="hidden md:flex h-screen flex-col bg-void text-ink">
+        <TopBar
+          aspect={state.aspect}
+          onAspect={(a) => updateState({ aspect: a })}
+          onCopy={handleCopy}
+          onSave={handleSave}
+          onReset={handleReset}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          showRulers={showRulers}
+          onToggleRulers={() => setShowRulers((v) => !v)}
+          showGrid={showGrid}
+          onToggleGrid={() => setShowGrid((v) => !v)}
+        />
+        <div className="flex flex-1 overflow-hidden">
+          <LeftPanel
+            device={state.device}
+            onDevice={(d) => updateState({ device: d })}
+            frameStyle={state.frameStyle}
+            onFrameStyle={(f) => updateState({ frameStyle: f })}
+            url={state.url}
+            onUrl={(u) => updateState({ url: u })}
+            pageTheme={state.pageTheme}
+            onPageTheme={(t) => updateState({ pageTheme: t })}
+            headerSize={state.headerSize}
+            onHeaderSize={(h) => updateState({ headerSize: h })}
+            shadow={state.shadow}
+            onShadow={(s) => updateState({ shadow: s })}
+            background={state.background}
+            onBackground={(b) => updateState({ background: b })}
+            radius={state.radius}
+            onRadius={(r) => updateState({ radius: r })}
+            codeSnippet={state.codeSnippet}
+            onCodeSnippet={(c) => updateState({ codeSnippet: c })}
+            onAddCodeToCanvas={() => updateState({ contentMode: "code" })}
+            layers={state.layers}
+            onLayers={(l) => updateState({ layers: l })}
+            onDeleteLayer={handleDeleteLayer}
+            mainImage={state.image}
+          />
+          <Canvas
+            device={state.device}
+            frameStyle={state.frameStyle}
+            url={state.url}
+            onUrl={(u) => updateState({ url: u })}
+            pageTheme={state.pageTheme}
+            headerSize={state.headerSize}
+            shadow={state.shadow}
+            background={state.background}
+            padding={state.padding}
+            radius={state.radius}
+            zoom={state.zoom}
+            tiltX={state.tiltX}
+            tiltY={state.tiltY}
+            aspect={state.aspect}
+            image={state.image}
+            onImage={(img) => updateState({ image: img })}
+            onRemoveImage={() => updateState({ image: null })}
+            canvasRef={canvasRef}
+            isExporting={isExporting}
+            contentMode={state.contentMode}
+            codeSnippet={state.codeSnippet}
+            onRemoveCode={() => updateState({ contentMode: "website" })}
+            showRulers={showRulers}
+            showGrid={showGrid}
+            layers={state.layers}
+          />
+          <RightPanel
+            zoom={state.zoom}
+            onZoom={(z) => updateState({ zoom: z })}
+            tiltX={state.tiltX}
+            tiltY={state.tiltY}
+            onTilt={(x, y) => updateState({ tiltX: x, tiltY: y })}
+            onPreset={(p) =>
+              updateState({
+                zoom: p.zoom,
+                tiltX: p.tiltX,
+                tiltY: p.tiltY,
+                padding: p.padding,
+              })
+            }
+            padding={state.padding}
+            background={state.background}
+            frameStyle={state.frameStyle}
+            url={state.url}
+            headerSize={state.headerSize}
+            shadow={state.shadow}
+            radius={state.radius}
+            image={state.image}
+            contentMode={state.contentMode}
+            codeSnippet={state.codeSnippet}
+            device={state.device}
+          />
+        </div>
+      </div>
+    </>
   );
 }

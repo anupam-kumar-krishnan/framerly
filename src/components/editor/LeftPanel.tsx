@@ -17,14 +17,14 @@ import {
 } from "lucide-react";
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
 import DeviceFrame from "@/components/shared/DeviceFrame";
-import FakeScreen from "@/components/shared/FakeScreen"; // adjust path to match your project
+import FakeScreen from "@/components/shared/FakeScreen";
 import {
   BACKGROUND_GROUPS,
   BackgroundPreset,
   ShadowPreset,
   DeviceType,
 } from "./types";
-import { Code2 } from "lucide-react"; // add to your lucide-react import line
+import { Code2 } from "lucide-react";
 import CodeSnippetPanel from "./CodeSnippetPanel";
 import { CodeSnippetState } from "./types";
 import { LayerItem } from "./types";
@@ -247,8 +247,8 @@ function DeviceCard({
   onSelect: (d: DeviceType) => void;
 }) {
   const Icon = deviceOption.icon;
-  const boxHeight = 64; // fixed thumbnail box height, in px
-  const verticalPadding = 10; // px of breathing room top and bottom
+  const boxHeight = 64;
+  const verticalPadding = 10;
   const usableHeight = boxHeight - verticalPadding * 2;
   const baseHeight = THUMB_BASE_HEIGHT[deviceOption.id];
   const baseWidth = THUMB_BASE_WIDTH[deviceOption.id];

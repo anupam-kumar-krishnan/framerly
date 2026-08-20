@@ -50,14 +50,12 @@ const BG_OPTIONS = [
   { key: "none", label: "None", icon: EyeOff },
 ];
 
-// One canvas fill per BG_OPTIONS entry, in the same order, so the swatch
-// and the active chip stay in sync as they cycle.
 const BG_CANVAS_FILLS = [
-  "linear-gradient(135deg, #78716c 0%, #44403c 45%, #1c1917 100%)", // image
-  "linear-gradient(180deg, #d6d3d1 0%, #78716c 100%)", // solid
-  "linear-gradient(135deg, #fbbf24 0%, #b45309 60%, #451a03 100%)", // gradient
-  "linear-gradient(135deg, #fbbf24 0%, #78716c 50%, #1c1917 100%)", // from photo
-  "transparent", // none
+  "linear-gradient(135deg, #78716c 0%, #44403c 45%, #1c1917 100%)",
+  "linear-gradient(180deg, #d6d3d1 0%, #78716c 100%)",
+  "linear-gradient(135deg, #fbbf24 0%, #b45309 60%, #451a03 100%)",
+  "linear-gradient(135deg, #fbbf24 0%, #78716c 50%, #1c1917 100%)",
+  "transparent",
 ];
 
 export default function BentoFeatures() {
@@ -320,9 +318,6 @@ function DepthIllustration() {
 }
 
 function StyleIllustration() {
-  // Duplicate the list so the strip can loop seamlessly: once the first
-  // copy has scrolled fully out of view, the second copy is in the exact
-  // position the first one started in, so the loop point is invisible.
   const loopSwatches = [...STYLE_SWATCHES, ...STYLE_SWATCHES];
 
   return (
@@ -497,9 +492,6 @@ function CaptureIllustration() {
 }
 
 function BackgroundIllustration() {
-  // A checkerboard base (so "None"/transparent has something to show against),
-  // with a fill that cycles through image / solid / gradient / from-photo /
-  // transparent, timed to match the icon row highlighting below it.
   return (
     <div className="flex flex-col items-center gap-4">
       <div

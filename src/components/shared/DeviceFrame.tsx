@@ -1,6 +1,6 @@
 import BrowserFrame, { FrameStyle } from "@/components/shared/BrowserFrame";
 import { ReactNode } from "react";
-import { DeviceType } from "@/components/editor/types"; // adjust to your real types.ts path
+import { DeviceType } from "@/components/editor/types";
 
 export default function DeviceFrame({
   device,

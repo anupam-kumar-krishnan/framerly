@@ -145,7 +145,6 @@ export default function CustomBackgroundSection({
       autoExtractedFor.current = mainImage;
       runExtraction(mainImage);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKind, mainImage, value.sourceImage]);
 
   const isActiveCustom = isCustomBackground(background);

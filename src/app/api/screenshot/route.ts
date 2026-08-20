@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
 
   const params = new URLSearchParams({
     url: normalized,
-    format: "png", // lossless, no compression artifacts
-    full_page: "false", // set "true" to capture full scroll height
+    format: "png",
+    full_page: "false",
     dark_mode: darkModeParam === "true" ? "true" : "false",
     block_ads: "true",
   });
@@ -51,7 +51,6 @@ export async function GET(req: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
     const dataUrl = `data:image/png;base64,${base64}`;
 
-    // X-Cache header tells you if this hit their cache (free) or was a fresh render
     const cacheStatus = res.headers.get("X-Cache") ?? "unknown";
 
     return NextResponse.json({ image: dataUrl, cache: cacheStatus });

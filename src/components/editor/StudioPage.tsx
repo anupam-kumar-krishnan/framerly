@@ -152,7 +152,7 @@ export default function StudioPage() {
   }, []);
 
   const undo = useCallback(() => {
-    lastChangeRef.current = null; // next edit after undo always starts a fresh entry
+    lastChangeRef.current = null;
     dispatch({ type: "UNDO" });
   }, []);
 
@@ -227,9 +227,7 @@ export default function StudioPage() {
       await navigator.clipboard.write([
         new ClipboardItem({ [blob.type]: blob }),
       ]);
-    } catch {
-      // clipboard write can fail without permissions; silently ignore
-    }
+    } catch {}
   }, [exportPng]);
 
   const handleDeleteLayer = useCallback(

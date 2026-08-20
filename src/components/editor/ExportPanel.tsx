@@ -9,8 +9,8 @@ export type ExportResolution = "1x" | "2x" | "3x";
 
 export interface ExportOptions {
   format: ExportFormat;
-  quality: number; // 0-1
-  scale: number; // 1, 2, 3
+  quality: number;
+  scale: number;
 }
 
 const QUALITY_MAP: Record<ExportQuality, number> = {
