@@ -58,11 +58,6 @@ const GROUPS: { title: string; presets: Preset[] }[] = [
   },
 ];
 
-// NOTE: this must match the real pixel width your main/center canvas
-// renders the DeviceFrame/CodeBlock content at. If that width is dynamic
-// (e.g. measured via ResizeObserver on the main canvas), pass it down as
-// a prop instead of hardcoding — the two must never drift apart, or this
-// whole fix stops working.
 const CANVAS_REFERENCE_WIDTH = 860;
 const CANVAS_REFERENCE_HEIGHT = (CANVAS_REFERENCE_WIDTH * 3) / 4; // 4:3
 
@@ -165,20 +160,6 @@ function TiltPad({
   );
 }
 
-// Renders a scaled-down replica of the canvas (background + frame/content)
-// at a given zoom/tilt/padding, so both the live preview and each preset
-// button can show what that setting actually looks like with the user's
-// real screenshot/code, background, and frame style.
-//
-// FIX: DeviceFrame/CodeBlock use fixed-pixel chrome (bezels, header height,
-// border widths) that doesn't shrink just because the container is small.
-// Previously we rendered them directly inside a small box, so bezels/headers
-// looked proportionally huge compared to the main canvas. Now we render the
-// content at the SAME real pixel size as the main canvas inside a hidden
-// full-size wrapper, then apply a single CSS `scale()` to the whole wrapper
-// based on how much smaller the visible box is. That scales every pixel
-// value (bezel, header, border, padding, radius) down in exact proportion,
-// just like shrinking a photo — so it matches the main canvas at any size.
 function MiniStage({
   zoom,
   tiltX,

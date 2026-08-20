@@ -29,6 +29,7 @@ import CodeSnippetPanel from "./CodeSnippetPanel";
 import { CodeSnippetState } from "./types";
 import { LayerItem } from "./types";
 import LayersPanel from "./LayersPanel";
+import CustomBackgroundSection from "./CustomBackgroundSection";
 
 const DEVICES: { id: DeviceType; label: string; icon: typeof Smartphone }[] = [
   { id: "none", label: "None", icon: Square },
@@ -52,18 +53,10 @@ const SHADOWS: { id: ShadowPreset; label: string }[] = [
   { id: "long", label: "Long" },
 ];
 
-// Page content theme passed to the screenshot API (independent of the
-// browser chrome style, which is controlled separately via STYLES above).
 export type PageTheme = "light" | "dark";
 
-// Groups rendered as a 2-row, horizontally-scrolling strip instead of a
-// wrapping grid. Add/remove titles here to control which sections scroll.
 const SCROLLABLE_GROUPS = new Set(["Gradients", "Pattern"]);
 
-// Native range inputs don't paint a "how far along" fill on their own —
-// this computes that as a two-stop gradient (light gray up to the current
-// value, dark track after it) and gets applied as each input's own inline
-// background, so it moves live with the value on every change.
 function rangeFillStyle(value: number, min: number, max: number) {
   const pct = ((value - min) / (max - min)) * 100;
   return {
@@ -93,7 +86,6 @@ function Section({
   );
 }
 
-// Chevron-style collapsible header, matching BackgroundGroupSection's look.
 function CollapsibleSection({
   title,
   children,
@@ -228,19 +220,12 @@ function BackgroundGroupSection({
   );
 }
 
-// Height (in CSS px) each device's outer frame renders at when built full
-// size, before being scaled down for the thumbnail. Anything reasonable
-// works here — it just needs to roughly match each frame's real aspect
-// ratio so the transform-scale math below produces the right width.
-// NOTE: iphone now renders landscape (19.5:9) by default in DeviceFrame,
-// so this is sized to match that instead of the old tall 9:19.5 portrait
-// shape — otherwise this thumbnail would look squished/wrong.
 const THUMB_BASE_HEIGHT: Record<DeviceType, number> = {
-  browser: 150, // 16:10
-  none: 180, // 16:12 (bare)
-  macbook: 165, // 16:10 screen + base bar
-  iphone: 111, // 19.5:9 (landscape)
-  glass: 150, // 16:10
+  browser: 150,
+  none: 180,
+  macbook: 165,
+  iphone: 111,
+  glass: 150,
 };
 const THUMB_BASE_WIDTH: Record<DeviceType, number> = {
   browser: 240,
@@ -250,10 +235,6 @@ const THUMB_BASE_WIDTH: Record<DeviceType, number> = {
   glass: 240,
 };
 
-// Sidebar thumbnail for the Device section. Renders the *actual*
-// DeviceFrame at full size, then scales the whole thing down with a CSS
-// transform — so borders, the dynamic island, the MacBook hinge, etc. all
-// shrink proportionally instead of clipping/overlapping at small sizes.
 function DeviceCard({
   deviceOption,
   active,
@@ -345,6 +326,7 @@ export default function LeftPanel({
   layers,
   onLayers,
   onDeleteLayer,
+  mainImage,
 }: {
   device: DeviceType;
   onDevice: (d: DeviceType) => void;
@@ -368,6 +350,7 @@ export default function LeftPanel({
   layers: LayerItem[];
   onLayers: (l: LayerItem[]) => void;
   onDeleteLayer: (id: LayerItem["id"]) => void;
+  mainImage?: string | null;
 }) {
   const [tab, setTab] = useState<"design" | "background" | "code" | "layers">(
     "design",
@@ -570,6 +553,11 @@ export default function LeftPanel({
                 onSelect={onBackground}
               />
             ))}
+            <CustomBackgroundSection
+              background={background}
+              onSelect={onBackground}
+              mainImage={mainImage}
+            />
           </div>
         )}
 

@@ -19,9 +19,6 @@ import {
 } from "@/components/editor/types";
 import { toast } from "sonner";
 
-// --- Everything that should be undoable lives in this shape. ---------
-// View-only settings (rulers, grid, isExporting) stay as plain useState
-// below, outside the history — they're not "design" edits.
 type EditorState = {
   device: DeviceType;
   frameStyle: FrameStyle;
@@ -290,6 +287,7 @@ export default function StudioPage() {
           layers={state.layers}
           onLayers={(l) => updateState({ layers: l })}
           onDeleteLayer={handleDeleteLayer}
+          mainImage={state.image}
         />
         <Canvas
           device={state.device}

@@ -33,14 +33,6 @@ const TICK_GAP = 50;
 const SNAP_THRESHOLD = 6; // px
 const ROTATE_SNAP_THRESHOLD = 4; // deg, snaps to multiples of 45
 
-// The iPhone frame in DeviceFrame.tsx intentionally ignores the numeric
-// `radius` prop and always renders its own fixed proportional squircle
-// corner (see DeviceFrame.tsx, device === "iphone"). Any wrapper element
-// that draws a box-shadow / border-radius AROUND the phone (like the shadow
-// div below) has to mirror that same shape, or its corners round off at a
-// different curve than the phone underneath — producing a ghost rectangular
-// edge poking out past the phone's more-rounded corners. This constant is
-// kept in sync with DeviceFrame's `outerRadius`.
 const IPHONE_OUTER_RADIUS = "10% / 20%";
 
 function Ruler({
@@ -168,8 +160,8 @@ export default function Canvas({
   pageTheme: PageTheme;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false); // file drop hover state
-  const [capturing, setCapturing] = useState(false); // website screenshot loading state
+  const [dragging, setDragging] = useState(false);
+  const [capturing, setCapturing] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
@@ -181,15 +173,6 @@ export default function Canvas({
   const [guide, setGuide] = useState({ x: false, y: false });
   const [isTransforming, setIsTransforming] = useState(false);
 
-  // The shadow wrapper around the device frame must round its corners to
-  // match whatever shape the device actually renders with. Every device
-  // except "iphone" honors the plain numeric `radius` prop directly, so a
-  // px value is correct for them. "iphone" always overrides it internally
-  // with its own proportional squircle curve, so the shadow wrapper needs
-  // that same percentage-based radius instead — otherwise the shadow's
-  // corner curve (small, px-based) doesn't match the phone's corner curve
-  // (large, percentage-based), and the shadow's straight edge pokes out
-  // past the phone's more-rounded corner.
   const shadowRadius = device === "iphone" ? IPHONE_OUTER_RADIUS : radius;
 
   const resetTransform = useCallback(() => {
@@ -198,7 +181,6 @@ export default function Canvas({
     setSelected(false);
   }, []);
 
-  // Reset position/rotation whenever the content itself goes away or swaps mode
   useEffect(() => {
     resetTransform();
   }, [image, contentMode, resetTransform]);
@@ -320,8 +302,6 @@ export default function Canvas({
     [onImage],
   );
 
-  // Capture a screenshot of the entered website URL via /api/screenshot
-  // (backed by SnapRender) and load it into the canvas as the content image.
   const handleCapture = useCallback(async () => {
     const raw = url.trim();
     if (!raw) {
@@ -370,11 +350,9 @@ export default function Canvas({
       isFirstThemeRender.current = false;
       return;
     }
-    // Only re-capture if we're actually showing a captured website
     if (contentMode === "website" && image && url.trim()) {
       handleCapture();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageTheme]);
 
   const backgroundLayer = layers.find((l) => l.id === "background");
@@ -590,13 +568,6 @@ export default function Canvas({
                 <div
                   style={{
                     boxShadow: SHADOW_CSS[shadow],
-                    // Match the shadow wrapper's corner curve to whatever
-                    // shape the device inside actually renders with — see
-                    // `shadowRadius` above. Using the raw `radius` prop
-                    // here (as before) is only correct for devices that
-                    // honor it; "iphone" overrides it internally, so the
-                    // shadow box's straight/tightly-rounded corner used to
-                    // poke out past the phone's real, much-rounder corner.
                     borderRadius: shadowRadius,
                   }}
                 >
@@ -707,8 +678,6 @@ export default function Canvas({
   );
 }
 
-// Selection border, corner handles, and the floating rotate / delete toolbar.
-// Rendered as a child of the frame wrapper so it moves and rotates with it.
 function SelectionOverlay({
   onRotateStart,
   onDelete,

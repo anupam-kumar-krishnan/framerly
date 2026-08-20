@@ -7,27 +7,26 @@ export type BackgroundPreset = {
   label: string;
   css?: string;
   image?: string;
+  custom?: boolean;
+  kind?: CustomBackgroundKind;
 };
 
 export type AspectRatio = "16:9" | "4:3" | "1:1" | "9:16" | "3:2";
 
-// The physical mockup wrapped around the content. "browser" defers to
-// BrowserFrame's own FrameStyle (Safari/Chrome, light/dark) for its chrome;
-// the others render as standalone device frames with no sub-style.
 export type DeviceType = "browser" | "iphone" | "macbook" | "glass" | "none";
 
 export type EditorState = {
   device: DeviceType;
   frameStyle: FrameStyle;
   url: string;
-  headerSize: number; // percent
+  headerSize: number;
   shadow: ShadowPreset;
   background: BackgroundPreset;
-  padding: number; // percent of canvas
-  radius: number; // px
-  zoom: number; // percent
-  tiltX: number; // deg
-  tiltY: number; // deg
+  padding: number;
+  radius: number;
+  zoom: number;
+  tiltX: number;
+  tiltY: number;
   aspect: AspectRatio;
   image: string | null;
 };
@@ -467,7 +466,6 @@ export function getBackgroundById(id: string): BackgroundPreset {
 
 export const DEFAULT_BACKGROUND_ID = "pattern-peach-clouds";
 
-// Default device shown when the editor first loads / a new canvas is created.
 export const DEFAULT_DEVICE: DeviceType = "browser";
 
 export const ASPECTS: Record<AspectRatio, number> = {
@@ -503,7 +501,7 @@ export type CodeSnippetState = {
   fontSize: number;
   showLineNumbers: boolean;
   showWindowChrome: boolean;
-  compact: boolean; // "Less" padding toggle
+  compact: boolean;
 };
 
 export const CODE_THEME_BG: Record<CodeTheme, string> = {
@@ -553,3 +551,113 @@ export type LayerItem = {
 };
 
 export type PageTheme = "light" | "dark";
+
+export type CustomBackgroundKind =
+  | "image"
+  | "solid"
+  | "gradient"
+  | "transparent"
+  | "fromImage";
+
+export const CUSTOM_BACKGROUND_ID = "custom-background";
+
+export const DEFAULT_CUSTOM_SOLID = "#7b5cff";
+
+export const DEFAULT_CUSTOM_GRADIENT_FROM = "#7b5cff";
+
+export const DEFAULT_CUSTOM_GRADIENT_TO = "#4fb3ff";
+
+export const DEFAULT_CUSTOM_GRADIENT_ANGLE = 135;
+
+export type CustomBackgroundValue = {
+  image: string | null;
+  solid: string;
+  gradientFrom: string;
+  gradientTo: string;
+  gradientAngle: number;
+  sourceImage: string | null;
+  palette: string[];
+  paletteFrom: string;
+  paletteTo: string;
+};
+
+export const DEFAULT_CUSTOM_BACKGROUND_VALUE: CustomBackgroundValue = {
+  image: null,
+  solid: DEFAULT_CUSTOM_SOLID,
+  gradientFrom: DEFAULT_CUSTOM_GRADIENT_FROM,
+  gradientTo: DEFAULT_CUSTOM_GRADIENT_TO,
+  gradientAngle: DEFAULT_CUSTOM_GRADIENT_ANGLE,
+  sourceImage: null,
+  palette: [],
+  paletteFrom: DEFAULT_CUSTOM_GRADIENT_FROM,
+  paletteTo: DEFAULT_CUSTOM_GRADIENT_TO,
+};
+
+export function buildCustomGradientCss(
+  from: string,
+  to: string,
+  angle: number,
+): string {
+  return `linear-gradient(${angle}deg, ${from} 0%, ${to} 100%)`;
+}
+
+export function createCustomBackground(
+  kind: CustomBackgroundKind,
+  value: CustomBackgroundValue,
+): BackgroundPreset {
+  if (kind === "image") {
+    return {
+      id: CUSTOM_BACKGROUND_ID,
+      label: "Custom image",
+      image: value.image ?? undefined,
+      custom: true,
+      kind,
+    };
+  }
+  if (kind === "solid") {
+    return {
+      id: CUSTOM_BACKGROUND_ID,
+      label: "Custom color",
+      css: value.solid,
+      custom: true,
+      kind,
+    };
+  }
+  if (kind === "gradient") {
+    return {
+      id: CUSTOM_BACKGROUND_ID,
+      label: "Custom gradient",
+      css: buildCustomGradientCss(
+        value.gradientFrom,
+        value.gradientTo,
+        value.gradientAngle,
+      ),
+      custom: true,
+      kind,
+    };
+  }
+  if (kind === "fromImage") {
+    return {
+      id: CUSTOM_BACKGROUND_ID,
+      label: "From image",
+      css: buildCustomGradientCss(
+        value.paletteFrom,
+        value.paletteTo,
+        value.gradientAngle,
+      ),
+      custom: true,
+      kind,
+    };
+  }
+  return {
+    id: CUSTOM_BACKGROUND_ID,
+    label: "Transparent",
+    css: "transparent",
+    custom: true,
+    kind,
+  };
+}
+
+export function isCustomBackground(preset: BackgroundPreset): boolean {
+  return preset.custom === true || preset.id === CUSTOM_BACKGROUND_ID;
+}

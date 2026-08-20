@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(`${SNAPRENDER_ENDPOINT}?${params.toString()}`, {
       headers: { "X-API-Key": apiKey },
-      // avoid Next.js caching a stale screenshot for a dynamic URL param
       cache: "no-store",
     });
 

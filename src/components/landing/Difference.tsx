@@ -213,7 +213,7 @@ function ImageOrFallback({
       />
     );
   }
-  // Placeholder so the section renders sensibly with no assets wired up yet.
+
   if (variant === "before") {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-[#18181a] px-6 text-center">

@@ -19,9 +19,6 @@ export default function DeviceFrame({
   radius?: number;
   headerScale?: number;
 }) {
-  // "browser" delegates entirely to BrowserFrame, which already handles
-  // Safari/Chrome + light/dark chrome, header scale, and its own 16:10
-  // aspect ratio.
   if (device === "browser") {
     return (
       <BrowserFrame
@@ -36,8 +33,6 @@ export default function DeviceFrame({
     );
   }
 
-  // "none" reuses BrowserFrame's existing "bare" style (no chrome, 16:12
-  // aspect ratio) so behavior matches exactly what you already ship today.
   if (device === "none") {
     return (
       <BrowserFrame style="bare" radius={radius} className={className}>
@@ -47,32 +42,9 @@ export default function DeviceFrame({
   }
 
   if (device === "iphone") {
-    // Reference mockup: dark graphite/space-black metal body, thin metal
-    // rim, a distinct black bezel ring between the metal and the screen,
-    // very rounded — genuinely CIRCULAR — corners, buttons always on the
-    // visual LEFT edge, and a small camera pill offset toward the top with
-    // a single lens dot near one end (not centered). Landscape only.
-    //
-    // A single border-radius percentage stretches into an OVAL on this
-    // wide ~2:1 landscape box, since X% of the wide dimension is a much
-    // bigger pixel radius than X% of the short dimension. Measured against
-    // the reference photo directly (radius ~80px on an ~821x400px device),
-    // the real corner is circular, which needs CSS's two-value radius
-    // syntax — "horizontal% / vertical%" — rather than one number.
-    //
-    // If `radius` is explicitly passed, honor it as a plain px radius (opt
-    // -out escape hatch, stays circular in px terms automatically);
-    // otherwise default to the measured relative values below.
-    // Unlike browser/macbook/glass, a real iPhone has a fixed physical
-    // corner shape — it shouldn't take an arbitrary px radius from the
-    // generic "Corner radius" slider (that produces a tiny, barely-rounded
-    // corner once the frame renders at full canvas size, since px doesn't
-    // scale with the box). So `radius` is intentionally ignored here; the
-    // iPhone frame always uses its own proportional squircle radius.
     const outerRadius = "10% / 20%";
     const bezelRadius = "8% / 17%";
     const screenRadius = "6% / 14%";
-    // Bezel ring sits between the metal case and the screen.
     const bezelPad = "1.5%";
 
     return (
@@ -90,10 +62,6 @@ export default function DeviceFrame({
           style={{
             borderRadius: outerRadius,
             clipPath: `inset(0 round ${outerRadius})`,
-            // Dark graphite / space-black metal: several light/dark bands
-            // catching light differently, not one flat tone or a single
-            // light-to-dark sweep — that's what reads as brushed metal
-            // instead of flat plastic.
             background:
               "linear-gradient(135deg, #6b6d72 0%, #3d3e42 8%, #2a2b2e 18%, #57585d 30%, #232427 42%, #4a4b50 55%, #26272a 68%, #64656a 82%, #34353a 100%)",
             boxShadow:
@@ -102,10 +70,6 @@ export default function DeviceFrame({
           }}
         />
 
-        {/* Physical buttons — always on the visual left edge. Pill-shaped
-            (fully rounded ends, not a rectangle with a slight radius),
-            flush with the case's outer edge, and a darker brushed-metal
-            tone than the body so they read as separate components. */}
         <div
           className="absolute rounded-full"
           style={{
@@ -137,10 +101,6 @@ export default function DeviceFrame({
           }}
         />
 
-        {/* Black bezel ring — sits inside the metal case, around the
-            screen. This is what reads as the "thin black border" in the
-            reference; without it the metal appears to touch the screen
-            directly. */}
         <div
           className="relative h-full w-full overflow-hidden bg-black"
           style={{
@@ -154,17 +114,9 @@ export default function DeviceFrame({
             className="relative h-full w-full overflow-hidden bg-black"
             style={{
               borderRadius: screenRadius,
-              // border-radius + overflow-hidden alone can fail to clip a
-              // GPU-composited <canvas> (common with WebGL/animated
-              // canvas content) since it can render on its own compositing
-              // layer. clip-path clips at the compositing level and
-              // reliably contains canvas/video children too.
               clipPath: `inset(0 round ${screenRadius})`,
             }}
           >
-            {/* Camera island — elongated black pill, centered on the top
-                edge of the screen, with a single lens dot offset toward
-                one end (matches reference; not a centered dot). */}
             <div
               className="absolute z-10 rounded-full bg-black"
               style={{
@@ -181,10 +133,6 @@ export default function DeviceFrame({
                   top: "50%",
                   right: "8%",
                   transform: "translateY(-50%)",
-                  // Sized off the pill's HEIGHT, not width — the pill is
-                  // short and wide, so a width-based aspect-ratio circle
-                  // overflows top/bottom of it. Height-based keeps the
-                  // lens a small dot that sits inside the pill.
                   height: "70%",
                   aspectRatio: "1 / 1",
                   width: "auto",
@@ -218,10 +166,6 @@ export default function DeviceFrame({
     return (
       <div
         className={`flex flex-col ${className}`}
-        // Aspect ratio lives on this outer wrapper (not the inner screen
-        // div) so it has a *definite* computed height — otherwise the
-        // hinge bar's height:6% below has nothing real to resolve
-        // against and collapses to ~0.
         style={{ aspectRatio: "16 / 10.6" }}
       >
         <div
@@ -256,9 +200,6 @@ export default function DeviceFrame({
 
   if (device === "glass") {
     const r = radius ?? 12;
-    // Real inner padding for the glass "frame" around the content, not
-    // just a hairline gradient border. Scales down a bit at small radii so
-    // tiny thumbnails (see LeftPanel's DeviceCard) don't look squeezed.
     const pad = Math.max(10, Math.min(20, r + 4));
     const outerRadius = r + pad / 2;
     return (

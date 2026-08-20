@@ -80,13 +80,6 @@ const INITIAL_STATE: EditorState = {
 const MERGE_WINDOW_MS = 400;
 const HISTORY_LIMIT = 100;
 
-// --- History reducer -------------------------------------------------
-// A single source of truth: the entries array and the current index
-// live together and update atomically. No refs mirroring state, no
-// setState calls nested inside other setState updaters — this keeps
-// the reducer pure, which matters because React (Strict Mode, and in
-// general) may invoke a reducer more than once per dispatch.
-
 type HistoryState = { entries: EditorState[]; index: number };
 
 type HistoryAction =
@@ -256,8 +249,6 @@ export default function StudioPage() {
     [state.contentMode, updateState],
   );
 
-  console.log("historyState:", historyState.index, historyState.entries.length);
-
   return (
     <div className="flex h-screen flex-col bg-void text-ink">
       <TopBar
@@ -299,6 +290,7 @@ export default function StudioPage() {
           onDeleteLayer={handleDeleteLayer}
           pageTheme={pageTheme}
           onPageTheme={setPageTheme}
+          mainImage={state.image}
         />
         <Canvas
           device={state.device}

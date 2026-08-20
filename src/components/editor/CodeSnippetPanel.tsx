@@ -5,7 +5,6 @@ import { ChevronDown, List, PanelTop, Minus } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { CODE_FONTS, CODE_LANGUAGES, CodeSnippetState } from "./types";
 
-// Fills the track behind the thumb, same look as the Header Size slider.
 function rangeFillStyle(value: number, min: number, max: number) {
   const pct = ((value - min) / (max - min)) * 100;
   return {

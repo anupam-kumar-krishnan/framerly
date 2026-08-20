@@ -39,8 +39,6 @@ const riseVariants: Variants = {
 
 type PreviewFrame = "image1" | "yellowGradient" | "image2";
 
-// Drop your own images in /public/backgrounds/ using these filenames
-// (or change the paths below to match your files).
 const frameBackground: Record<PreviewFrame, string> = {
   image1: "bg-[url('/backgrounds/macos-2.jpg')] bg-cover bg-center",
   yellowGradient:
@@ -48,7 +46,6 @@ const frameBackground: Record<PreviewFrame, string> = {
   image2: "bg-[url('/backgrounds/pattern-3.jpg')] bg-cover bg-center",
 };
 
-/** Generic floating browser-window chrome. The dashboard content goes in `children`. */
 function PreviewWindow({
   frame,
   url,
