@@ -147,12 +147,12 @@ function AnalyticsDashboard() {
 const features = [
   {
     icon: Blend,
-    title: "44 gradients",
+    title: "44 Gradients",
     desc: "Curated two- and four-stop ramps",
   },
   {
     icon: Sparkles,
-    title: "16 photos",
+    title: "16 Photos",
     desc: "MacOS, skies, patterns, and abstracts",
   },
   {
@@ -172,7 +172,7 @@ const features = [
   },
   {
     icon: Layers,
-    title: "Three shadow depths",
+    title: "3 Shadow depths",
     desc: "A whisper of lift to a full drop",
   },
 ];
