@@ -42,17 +42,21 @@
 <img width="1895" height="792" alt="image" src="https://github.com/user-attachments/assets/b6a23d7c-b6c2-4a93-b64e-179cfd99b18b" />
 <img width="1894" height="794" alt="image" src="https://github.com/user-attachments/assets/c4f67c3b-e718-49ab-901d-a06c228b73da" />
 
+# _Steps_
 
-## Studio
+<img width="1898" height="718" alt="image" src="https://github.com/user-attachments/assets/6689c47e-dc50-46ea-86e0-9d4cd6b5c95b" />
+
+
+## _Studio_
 
 <img width="1919" height="880" alt="image" src="https://github.com/user-attachments/assets/7eb664d0-8355-4617-a192-16c7e773c503" />
 
 
-## Sample
+## _Sample_
 
 <img width="1536" height="1152" alt="framerly-shot-sample" src="https://github.com/user-attachments/assets/49f33480-e0e6-4422-b5dd-17c90187f18c" />
 
-## Tech Stack
+## _Tech Stack_
 
 | Layer     | Choice                                        | Badge                                                                                                                                                                                                                                                                                                                         |
 | --------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
