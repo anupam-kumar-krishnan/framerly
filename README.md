@@ -1,4 +1,4 @@
- <img width="1600" height="400" alt="framerly-github-banner" src="https://github.com/user-attachments/assets/6c2b0a9f-1345-4cc8-9ba2-baa207518714" />
+<img width="1899" height="875" alt="image" src="https://github.com/user-attachments/assets/e9913048-466b-4ec1-84b6-eac44372567b" />
 
 <h1>📸 Framerly - <a href="https://framerly-shot.vercel.app/"><b>🌐 Live Demo</b></a></h1>
 
@@ -39,15 +39,24 @@
 - **Angle Preview** — Instantly preview your design from every angle before exporting. <br>
 - **Website Screenshot** — Generate a screenshot directly from a website link, no manual upload needed.
 
-## Studio
+<img width="1895" height="792" alt="image" src="https://github.com/user-attachments/assets/b6a23d7c-b6c2-4a93-b64e-179cfd99b18b" />
+<img width="1894" height="794" alt="image" src="https://github.com/user-attachments/assets/c4f67c3b-e718-49ab-901d-a06c228b73da" />
 
-![Studio](./public/studio.png)
+# _Steps_
 
-## Sample
+<img width="1898" height="718" alt="image" src="https://github.com/user-attachments/assets/6689c47e-dc50-46ea-86e0-9d4cd6b5c95b" />
+
+
+## _Studio_
+
+<img width="1919" height="880" alt="image" src="https://github.com/user-attachments/assets/7eb664d0-8355-4617-a192-16c7e773c503" />
+
+
+## _Sample_
 
 <img width="1536" height="1152" alt="framerly-shot-sample" src="https://github.com/user-attachments/assets/49f33480-e0e6-4422-b5dd-17c90187f18c" />
 
-## Tech Stack
+## _Tech Stack_
 
 | Layer     | Choice                                        | Badge                                                                                                                                                                                                                                                                                                                         |
 | --------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
