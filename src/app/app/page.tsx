@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { toPng, toJpeg } from "html-to-image";
+import { toPng } from "html-to-image";
 import TopBar from "@/components/editor/TopBar";
-import LeftPanel, { PageTheme } from "@/components/editor/LeftPanel";
+import LeftPanel from "@/components/editor/LeftPanel";
 import Canvas from "@/components/editor/Canvas";
 import RightPanel from "@/components/editor/RightPanel";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
-import type { ExportOptions } from "@/components/editor/ExportPanel";
 import {
   AspectRatio,
   BACKGROUND_PRESETS,
@@ -17,15 +16,21 @@ import {
   DeviceType,
   LayerItem,
   ShadowPreset,
+  getBackgroundById,
+  DEFAULT_BACKGROUND_ID,
+  DEFAULT_DEVICE,
 } from "@/components/editor/types";
 import { toast } from "sonner";
-import MobileStudioNotice from "@/components/shared/MobileStudioNotice";
+import { PageTheme } from "@/components/editor/LeftPanel";
+import {
+  ANIMATION_GROUPS,
+  type AnimationPreset,
+} from "@/remotion/animationPresets";
 
 type EditorState = {
   device: DeviceType;
   frameStyle: FrameStyle;
   url: string;
-  pageTheme: PageTheme;
   headerSize: number;
   shadow: ShadowPreset;
   background: BackgroundPreset;
@@ -58,13 +63,12 @@ const DEFAULT_CODE_SNIPPET: CodeSnippetState = {
 };
 
 const INITIAL_STATE: EditorState = {
-  device: "browser",
+  device: DEFAULT_DEVICE,
   frameStyle: "chrome-dark",
   url: "https://framerly-shot.vercel.app",
-  pageTheme: "dark",
   headerSize: 100,
   shadow: "soft",
-  background: BACKGROUND_PRESETS[0],
+  background: getBackgroundById(DEFAULT_BACKGROUND_ID),
   padding: 10,
   radius: 16,
   zoom: 100,
@@ -102,48 +106,65 @@ function historyReducer(
         : state.entries.slice(0, state.index + 1);
 
       let newEntries = [...base, next];
+
       if (newEntries.length > HISTORY_LIMIT) {
         newEntries = newEntries.slice(newEntries.length - HISTORY_LIMIT);
       }
 
-      return { entries: newEntries, index: newEntries.length - 1 };
+      return {
+        entries: newEntries,
+        index: newEntries.length - 1,
+      };
     }
+
     case "UNDO":
-      return { ...state, index: Math.max(0, state.index - 1) };
+      return {
+        ...state,
+        index: Math.max(0, state.index - 1),
+      };
+
     case "REDO":
       return {
         ...state,
         index: Math.min(state.entries.length - 1, state.index + 1),
       };
+
     default:
       return state;
   }
 }
 
-// html-to-image has no native toWebp — rasterize the PNG output through a
-// canvas and re-encode as WebP at the requested quality.
-function convertDataUrlToWebp(
-  dataUrl: string,
-  quality: number,
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Could not get canvas context"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL("image/webp", quality));
-    };
-    img.onerror = () =>
-      reject(new Error("Failed to load image for WebP conversion"));
-    img.src = dataUrl;
-  });
+/**
+ * Always return a valid animation preset.
+ *
+ * This intentionally does not trust ANIMATION_GROUPS[0].presets[0]
+ * to exist at runtime. If the animation preset list is ever empty,
+ * Canvas still receives a valid object and cannot crash on durationMs.
+ */
+const FALLBACK_ANIMATION_PRESET: AnimationPreset = {
+  id: "fallback",
+  label: "Fallback",
+  kind: "fade",
+  durationMs: 1000,
+  keyframes: (progress: number) => ({
+    opacity: progress,
+  }),
+};
+
+function getDefaultAnimationPreset(): AnimationPreset {
+  for (const group of ANIMATION_GROUPS ?? []) {
+    const preset = group?.presets?.[0];
+
+    if (
+      preset &&
+      typeof preset.durationMs === "number" &&
+      typeof preset.keyframes === "function"
+    ) {
+      return preset;
+    }
+  }
+
+  return FALLBACK_ANIMATION_PRESET;
 }
 
 export default function StudioPage() {
@@ -151,15 +172,25 @@ export default function StudioPage() {
     entries: [INITIAL_STATE],
     index: 0,
   });
+
   const lastChangeRef = useRef<{ key: string; time: number } | null>(null);
 
   const state = historyState.entries[historyState.index];
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isVideoExporting, setIsVideoExporting] = useState(false);
   const [showRulers, setShowRulers] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+  const [pageTheme, setPageTheme] = useState<PageTheme>("light");
 
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const [activeAnimationPreset, setActiveAnimationPreset] =
+    useState<AnimationPreset>(getDefaultAnimationPreset);
+
+  const [animationFrame, setAnimationFrame] = useState(0);
+
+  const animationRafRef = useRef<number | null>(null);
 
   const updateState = useCallback((updates: Partial<EditorState>) => {
     const keys = Object.keys(updates).sort();
@@ -171,9 +202,16 @@ export default function StudioPage() {
       lastChangeRef.current.key === mergeKey &&
       now - lastChangeRef.current.time < MERGE_WINDOW_MS;
 
-    lastChangeRef.current = { key: mergeKey, time: now };
+    lastChangeRef.current = {
+      key: mergeKey,
+      time: now,
+    };
 
-    dispatch({ type: "UPDATE", updates, shouldMerge });
+    dispatch({
+      type: "UPDATE",
+      updates,
+      shouldMerge,
+    });
   }, []);
 
   const undo = useCallback(() => {
@@ -189,16 +227,69 @@ export default function StudioPage() {
   const canUndo = historyState.index > 0;
   const canRedo = historyState.index < historyState.entries.length - 1;
 
+  const stopAnimation = useCallback(() => {
+    if (animationRafRef.current !== null) {
+      cancelAnimationFrame(animationRafRef.current);
+      animationRafRef.current = null;
+    }
+  }, []);
+
+  const playAnimation = useCallback(
+    (preset: AnimationPreset) => {
+      const safePreset =
+        preset &&
+        typeof preset.durationMs === "number" &&
+        typeof preset.keyframes === "function"
+          ? preset
+          : getDefaultAnimationPreset();
+
+      stopAnimation();
+
+      setActiveAnimationPreset(safePreset);
+      setAnimationFrame(0);
+
+      const totalFrames = Math.max(
+        1,
+        Math.ceil((safePreset.durationMs / 1000) * 30),
+      );
+
+      const startedAt = performance.now();
+
+      const tick = (now: number) => {
+        const elapsed = now - startedAt;
+        const frame = Math.min(totalFrames, Math.round((elapsed / 1000) * 30));
+
+        setAnimationFrame(frame);
+
+        if (frame < totalFrames) {
+          animationRafRef.current = requestAnimationFrame(tick);
+        } else {
+          animationRafRef.current = null;
+        }
+      };
+
+      animationRafRef.current = requestAnimationFrame(tick);
+    },
+    [stopAnimation],
+  );
+
+  useEffect(() => {
+    return () => stopAnimation();
+  }, [stopAnimation]);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const cmd = e.metaKey || e.ctrlKey;
       if (!cmd) return;
+
       const target = e.target as HTMLElement | null;
+
       const isEditable =
         target &&
         (target.tagName === "INPUT" ||
           target.tagName === "TEXTAREA" ||
           target.isContentEditable);
+
       if (isEditable) return;
 
       if (e.key.toLowerCase() === "z" && e.shiftKey) {
@@ -212,76 +303,65 @@ export default function StudioPage() {
         redo();
       }
     }
+
     window.addEventListener("keydown", onKeyDown);
+
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [undo, redo]);
 
-  // Renders the canvas at the requested format/quality/resolution.
-  // `scale` maps directly to html-to-image's `pixelRatio`, which is what
-  // actually controls the real pixel dimensions of the exported image —
-  // previously this was hardcoded to 2 regardless of user selection.
-  const exportImage = useCallback(
-    async ({ format, quality, scale }: ExportOptions) => {
-      if (!canvasRef.current) return null;
-      setIsExporting(true);
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      try {
-        const htiOptions = {
-          pixelRatio: scale,
-          quality,
-          cacheBust: true,
-        };
+  const exportPng = useCallback(async () => {
+    if (!canvasRef.current) return null;
 
-        if (format === "PNG") {
-          return await toPng(canvasRef.current, htiOptions);
-        }
-        if (format === "JPEG") {
-          return await toJpeg(canvasRef.current, htiOptions);
-        }
-        // WebP
-        const pngDataUrl = await toPng(canvasRef.current, htiOptions);
-        return await convertDataUrlToWebp(pngDataUrl, quality);
-      } finally {
-        setIsExporting(false);
-      }
-    },
-    [],
-  );
+    setIsExporting(true);
+
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+
+    try {
+      return await toPng(canvasRef.current, {
+        pixelRatio: 2,
+        cacheBust: true,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
 
   const handleReset = useCallback(() => {
     updateState({ ...INITIAL_STATE });
-  }, [updateState]);
+    stopAnimation();
+    setActiveAnimationPreset(getDefaultAnimationPreset());
+    setAnimationFrame(0);
+  }, [stopAnimation, updateState]);
 
-  const handleSave = useCallback(
-    async (options: ExportOptions) => {
-      const dataUrl = await exportImage(options);
-      if (!dataUrl) return;
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `framerly-shot.${options.format.toLowerCase()}`;
-      a.click();
-    },
-    [exportImage],
-  );
+  const handleSave = useCallback(async () => {
+    const dataUrl = await exportPng();
+
+    if (!dataUrl) return;
+
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "framerly-shot.png";
+    a.click();
+  }, [exportPng]);
 
   const handleCopy = useCallback(async () => {
-    // The Copy button has no resolution picker attached to it, so we use
-    // sensible fixed defaults (PNG for clipboard compatibility, 2x for a
-    // crisp paste).
-    const dataUrl = await exportImage({
-      format: "PNG",
-      quality: 0.85,
-      scale: 2,
-    });
+    const dataUrl = await exportPng();
+
     if (!dataUrl) return;
+
     try {
       const res = await fetch(dataUrl);
       const blob = await res.blob();
+
       await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob }),
+        new ClipboardItem({
+          [blob.type]: blob,
+        }),
       ]);
     } catch {}
-  }, [exportImage]);
+  }, [exportPng]);
 
   const handleDeleteLayer = useCallback(
     (id: LayerItem["id"]) => {
@@ -291,9 +371,13 @@ export default function StudioPage() {
             state.contentMode === "code" ? "website" : state.contentMode,
           image: null,
         });
+
         toast.success("Content cleared");
       } else if (id === "background") {
-        updateState({ background: BACKGROUND_PRESETS[8] });
+        updateState({
+          background: getBackgroundById(DEFAULT_BACKGROUND_ID),
+        });
+
         toast.success("Background reset");
       }
     },
@@ -301,108 +385,112 @@ export default function StudioPage() {
   );
 
   return (
-    <>
-      <div className="md:hidden">
-        <MobileStudioNotice />
-      </div>
+    <div className="flex h-screen flex-col bg-void text-ink">
+      <TopBar
+        aspect={state.aspect}
+        onAspect={(a) => updateState({ aspect: a })}
+        onCopy={handleCopy}
+        onSave={handleSave}
+        onReset={handleReset}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        showRulers={showRulers}
+        onToggleRulers={() => setShowRulers((v) => !v)}
+        showGrid={showGrid}
+        onToggleGrid={() => setShowGrid((v) => !v)}
+      />
 
-      <div className="hidden md:flex h-screen flex-col bg-void text-ink">
-        <TopBar
-          aspect={state.aspect}
-          onAspect={(a) => updateState({ aspect: a })}
-          onCopy={handleCopy}
-          onSave={handleSave}
-          onReset={handleReset}
-          onUndo={undo}
-          onRedo={redo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          showRulers={showRulers}
-          onToggleRulers={() => setShowRulers((v) => !v)}
-          showGrid={showGrid}
-          onToggleGrid={() => setShowGrid((v) => !v)}
+      <div className="flex flex-1 overflow-hidden">
+        <LeftPanel
+          device={state.device}
+          onDevice={(d) => updateState({ device: d })}
+          frameStyle={state.frameStyle}
+          onFrameStyle={(f) => updateState({ frameStyle: f })}
+          url={state.url}
+          onUrl={(u) => updateState({ url: u })}
+          headerSize={state.headerSize}
+          onHeaderSize={(h) => updateState({ headerSize: h })}
+          shadow={state.shadow}
+          onShadow={(s) => updateState({ shadow: s })}
+          background={state.background}
+          onBackground={(b) => updateState({ background: b })}
+          radius={state.radius}
+          onRadius={(r) => updateState({ radius: r })}
+          codeSnippet={state.codeSnippet}
+          onCodeSnippet={(c) => updateState({ codeSnippet: c })}
+          onAddCodeToCanvas={() => updateState({ contentMode: "code" })}
+          layers={state.layers}
+          onLayers={(l) => updateState({ layers: l })}
+          onDeleteLayer={handleDeleteLayer}
+          pageTheme={pageTheme}
+          onPageTheme={setPageTheme}
+          mainImage={state.image}
         />
-        <div className="flex flex-1 overflow-hidden">
-          <LeftPanel
-            device={state.device}
-            onDevice={(d) => updateState({ device: d })}
-            frameStyle={state.frameStyle}
-            onFrameStyle={(f) => updateState({ frameStyle: f })}
-            url={state.url}
-            onUrl={(u) => updateState({ url: u })}
-            pageTheme={state.pageTheme}
-            onPageTheme={(t) => updateState({ pageTheme: t })}
-            headerSize={state.headerSize}
-            onHeaderSize={(h) => updateState({ headerSize: h })}
-            shadow={state.shadow}
-            onShadow={(s) => updateState({ shadow: s })}
-            background={state.background}
-            onBackground={(b) => updateState({ background: b })}
-            radius={state.radius}
-            onRadius={(r) => updateState({ radius: r })}
-            codeSnippet={state.codeSnippet}
-            onCodeSnippet={(c) => updateState({ codeSnippet: c })}
-            onAddCodeToCanvas={() => updateState({ contentMode: "code" })}
-            layers={state.layers}
-            onLayers={(l) => updateState({ layers: l })}
-            onDeleteLayer={handleDeleteLayer}
-            mainImage={state.image}
-          />
-          <Canvas
-            device={state.device}
-            frameStyle={state.frameStyle}
-            url={state.url}
-            onUrl={(u) => updateState({ url: u })}
-            pageTheme={state.pageTheme}
-            headerSize={state.headerSize}
-            shadow={state.shadow}
-            background={state.background}
-            padding={state.padding}
-            radius={state.radius}
-            zoom={state.zoom}
-            tiltX={state.tiltX}
-            tiltY={state.tiltY}
-            aspect={state.aspect}
-            image={state.image}
-            onImage={(img) => updateState({ image: img })}
-            onRemoveImage={() => updateState({ image: null })}
-            canvasRef={canvasRef}
-            isExporting={isExporting}
-            contentMode={state.contentMode}
-            codeSnippet={state.codeSnippet}
-            onRemoveCode={() => updateState({ contentMode: "website" })}
-            showRulers={showRulers}
-            showGrid={showGrid}
-            layers={state.layers}
-          />
-          <RightPanel
-            zoom={state.zoom}
-            onZoom={(z) => updateState({ zoom: z })}
-            tiltX={state.tiltX}
-            tiltY={state.tiltY}
-            onTilt={(x, y) => updateState({ tiltX: x, tiltY: y })}
-            onPreset={(p) =>
-              updateState({
-                zoom: p.zoom,
-                tiltX: p.tiltX,
-                tiltY: p.tiltY,
-                padding: p.padding,
-              })
-            }
-            padding={state.padding}
-            background={state.background}
-            frameStyle={state.frameStyle}
-            url={state.url}
-            headerSize={state.headerSize}
-            shadow={state.shadow}
-            radius={state.radius}
-            image={state.image}
-            contentMode={state.contentMode}
-            codeSnippet={state.codeSnippet}
-            device={state.device}
-          />
-        </div>
+
+        <Canvas
+          device={state.device}
+          frameStyle={state.frameStyle}
+          url={state.url}
+          onUrl={(u) => updateState({ url: u })}
+          headerSize={state.headerSize}
+          shadow={state.shadow}
+          background={state.background}
+          padding={state.padding}
+          radius={state.radius}
+          zoom={state.zoom}
+          tiltX={state.tiltX}
+          tiltY={state.tiltY}
+          aspect={state.aspect}
+          image={state.image}
+          onImage={(img) => updateState({ image: img })}
+          onRemoveImage={() => updateState({ image: null })}
+          canvasRef={canvasRef}
+          isExporting={isExporting || isVideoExporting}
+          contentMode={state.contentMode}
+          codeSnippet={state.codeSnippet}
+          onRemoveCode={() => updateState({ contentMode: "website" })}
+          showRulers={showRulers}
+          showGrid={showGrid}
+          layers={state.layers}
+          pageTheme={pageTheme}
+          animationPresetId={activeAnimationPreset.id}
+          animationFrame={animationFrame}
+        />
+
+        <RightPanel
+          zoom={state.zoom}
+          onZoom={(z) => updateState({ zoom: z })}
+          tiltX={state.tiltX}
+          tiltY={state.tiltY}
+          onTilt={(x, y) => updateState({ tiltX: x, tiltY: y })}
+          onPreset={(p) =>
+            updateState({
+              zoom: p.zoom,
+              tiltX: p.tiltX,
+              tiltY: p.tiltY,
+              padding: p.padding,
+            })
+          }
+          padding={state.padding}
+          background={state.background}
+          frameStyle={state.frameStyle}
+          url={state.url}
+          headerSize={state.headerSize}
+          shadow={state.shadow}
+          radius={state.radius}
+          image={state.image}
+          contentMode={state.contentMode}
+          codeSnippet={state.codeSnippet}
+          device={state.device}
+          canvasRef={canvasRef}
+          activeAnimationPreset={activeAnimationPreset}
+          onAnimationPreset={playAnimation}
+          onAnimationFrame={setAnimationFrame}
+          onVideoExporting={setIsVideoExporting}
+        />
       </div>
-    </>
+    </div>
   );
 }

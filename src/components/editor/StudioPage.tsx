@@ -22,6 +22,7 @@ import {
 } from "@/components/editor/types";
 import { toast } from "sonner";
 import { PageTheme } from "./types";
+import { ANIMATION_GROUPS, AnimationPreset } from "@/remotion/animationPresets";
 
 type EditorState = {
   device: DeviceType;
@@ -130,11 +131,16 @@ export default function StudioPage() {
   const state = historyState.entries[historyState.index];
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isVideoExporting, setIsVideoExporting] = useState(false);
   const [showRulers, setShowRulers] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [pageTheme, setPageTheme] = useState<PageTheme>("light");
 
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const [activeAnimationPreset, setActiveAnimationPreset] =
+    useState<AnimationPreset>(ANIMATION_GROUPS[0].presets[0]);
+  const [animationFrame, setAnimationFrame] = useState(0);
 
   const updateState = useCallback((updates: Partial<EditorState>) => {
     const keys = Object.keys(updates).sort();
@@ -163,6 +169,41 @@ export default function StudioPage() {
 
   const canUndo = historyState.index > 0;
   const canRedo = historyState.index < historyState.entries.length - 1;
+
+  // Play the selected motion preset directly on the real center canvas.
+  // Remotion remains the right-side preview; this is what makes the editor
+  // and the exported video use the same keyframes.
+  useEffect(() => {
+    if (isVideoExporting) return;
+
+    const durationFrames = Math.max(
+      1,
+      Math.ceil((activeAnimationPreset.durationMs / 1000) * 30),
+    );
+    let frame = 0;
+    let raf = 0;
+    let lastTime = performance.now();
+    const frameDuration = 1000 / 30;
+
+    setAnimationFrame(0);
+
+    const tick = (now: number) => {
+      if (now - lastTime >= frameDuration) {
+        const elapsedFrames = Math.floor((now - lastTime) / frameDuration);
+        frame = (frame + Math.max(1, elapsedFrames)) % durationFrames;
+        lastTime = now;
+        setAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [
+    activeAnimationPreset.id,
+    activeAnimationPreset.durationMs,
+    isVideoExporting,
+  ]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -308,7 +349,9 @@ export default function StudioPage() {
           onImage={(img) => updateState({ image: img })}
           onRemoveImage={() => updateState({ image: null })}
           canvasRef={canvasRef}
-          isExporting={isExporting}
+          isExporting={isExporting || isVideoExporting}
+          animationPresetId={activeAnimationPreset.id}
+          animationFrame={animationFrame}
           contentMode={state.contentMode}
           codeSnippet={state.codeSnippet}
           onRemoveCode={() => updateState({ contentMode: "website" })}
@@ -342,6 +385,14 @@ export default function StudioPage() {
           contentMode={state.contentMode}
           codeSnippet={state.codeSnippet}
           device={state.device}
+          canvasRef={canvasRef}
+          activeAnimationPreset={activeAnimationPreset}
+          onAnimationPreset={(preset) => {
+            setActiveAnimationPreset(preset);
+            setAnimationFrame(0);
+          }}
+          onAnimationFrame={setAnimationFrame}
+          onVideoExporting={setIsVideoExporting}
         />
       </div>
     </div>

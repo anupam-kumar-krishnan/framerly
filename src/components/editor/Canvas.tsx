@@ -27,6 +27,7 @@ import {
 } from "./types";
 import { toast } from "sonner";
 import { PageTheme } from "./LeftPanel";
+import { getPreset } from "@/remotion/animationPresets";
 
 const RULER_SIZE = 20;
 const TICK_GAP = 50;
@@ -125,6 +126,8 @@ export default function Canvas({
   onRemoveCode,
   canvasRef,
   isExporting,
+  animationPresetId,
+  animationFrame,
   contentMode,
   codeSnippet,
   showRulers,
@@ -151,6 +154,8 @@ export default function Canvas({
   onRemoveImage: () => void;
   onRemoveCode: () => void;
   canvasRef: React.RefObject<HTMLDivElement | null>;
+  animationPresetId: string;
+  animationFrame: number;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
   showRulers: boolean;
@@ -173,6 +178,17 @@ export default function Canvas({
   const [isTransforming, setIsTransforming] = useState(false);
 
   const shadowRadius = device === "iphone" ? IPHONE_OUTER_RADIUS : radius;
+
+  const animationPreset = useMemo(
+    () => getPreset(animationPresetId),
+    [animationPresetId],
+  );
+  const animationTotalFrames = Math.max(
+    1,
+    Math.ceil((animationPreset.durationMs / 1000) * 30),
+  );
+  const animationProgress = Math.min(1, animationFrame / animationTotalFrames);
+  const animationStyle = animationPreset.keyframes(animationProgress);
 
   const resetTransform = useCallback(() => {
     setPos({ x: 0, y: 0 });
@@ -433,19 +449,21 @@ export default function Canvas({
                 cursor: selected ? "grab" : "pointer",
               }}
             >
-              <div
-                style={{
-                  transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
-                  transformStyle: "preserve-3d",
-                }}
-              >
+              <div style={animationStyle}>
                 <div
                   style={{
-                    boxShadow: SHADOW_CSS[shadow],
-                    borderRadius: radius,
+                    transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+                    transformStyle: "preserve-3d",
                   }}
                 >
-                  <CodeBlock snippet={codeSnippet} />
+                  <div
+                    style={{
+                      boxShadow: SHADOW_CSS[shadow],
+                      borderRadius: radius,
+                    }}
+                  >
+                    <CodeBlock snippet={codeSnippet} />
+                  </div>
                 </div>
               </div>
 
@@ -556,31 +574,33 @@ export default function Canvas({
                 cursor: selected ? "grab" : "pointer",
               }}
             >
-              <div
-                style={{
-                  transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
-                  transformStyle: "preserve-3d",
-                }}
-              >
+              <div style={animationStyle}>
                 <div
                   style={{
-                    boxShadow: SHADOW_CSS[shadow],
-                    borderRadius: shadowRadius,
+                    transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+                    transformStyle: "preserve-3d",
                   }}
                 >
-                  <DeviceFrame
-                    device={device}
-                    browserStyle={frameStyle}
-                    url={url || "yoursite.com"}
-                    className="w-full"
-                    headerScale={headerSize}
-                    radius={radius}
+                  <div
+                    style={{
+                      boxShadow: SHADOW_CSS[shadow],
+                      borderRadius: shadowRadius,
+                    }}
                   >
-                    <div
-                      className="relative h-full w-full bg-cover bg-center"
-                      style={{ backgroundImage: `url(${image})` }}
-                    />
-                  </DeviceFrame>
+                    <DeviceFrame
+                      device={device}
+                      browserStyle={frameStyle}
+                      url={url || "yoursite.com"}
+                      className="w-full"
+                      headerScale={headerSize}
+                      radius={radius}
+                    >
+                      <div
+                        className="relative h-full w-full bg-cover bg-center"
+                        style={{ backgroundImage: `url(${image})` }}
+                      />
+                    </DeviceFrame>
+                  </div>
                 </div>
               </div>
 
