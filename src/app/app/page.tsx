@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { toPng } from "html-to-image";
+import { toPng, toJpeg } from "html-to-image";
 import TopBar from "@/components/editor/TopBar";
 import LeftPanel, { PageTheme } from "@/components/editor/LeftPanel";
 import Canvas from "@/components/editor/Canvas";
 import RightPanel from "@/components/editor/RightPanel";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
+import type { ExportOptions } from "@/components/editor/ExportPanel";
 import {
   AspectRatio,
   BACKGROUND_PRESETS,
@@ -119,6 +120,32 @@ function historyReducer(
   }
 }
 
+// html-to-image has no native toWebp — rasterize the PNG output through a
+// canvas and re-encode as WebP at the requested quality.
+function convertDataUrlToWebp(
+  dataUrl: string,
+  quality: number,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Could not get canvas context"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/webp", quality));
+    };
+    img.onerror = () =>
+      reject(new Error("Failed to load image for WebP conversion"));
+    img.src = dataUrl;
+  });
+}
+
 export default function StudioPage() {
   const [historyState, dispatch] = useReducer(historyReducer, {
     entries: [INITIAL_STATE],
@@ -189,35 +216,63 @@ export default function StudioPage() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [undo, redo]);
 
-  const exportPng = useCallback(async () => {
-    if (!canvasRef.current) return null;
-    setIsExporting(true);
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    try {
-      return await toPng(canvasRef.current, {
-        pixelRatio: 2,
-        cacheBust: true,
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  }, []);
+  // Renders the canvas at the requested format/quality/resolution.
+  // `scale` maps directly to html-to-image's `pixelRatio`, which is what
+  // actually controls the real pixel dimensions of the exported image —
+  // previously this was hardcoded to 2 regardless of user selection.
+  const exportImage = useCallback(
+    async ({ format, quality, scale }: ExportOptions) => {
+      if (!canvasRef.current) return null;
+      setIsExporting(true);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      try {
+        const htiOptions = {
+          pixelRatio: scale,
+          quality,
+          cacheBust: true,
+        };
+
+        if (format === "PNG") {
+          return await toPng(canvasRef.current, htiOptions);
+        }
+        if (format === "JPEG") {
+          return await toJpeg(canvasRef.current, htiOptions);
+        }
+        // WebP
+        const pngDataUrl = await toPng(canvasRef.current, htiOptions);
+        return await convertDataUrlToWebp(pngDataUrl, quality);
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [],
+  );
 
   const handleReset = useCallback(() => {
     updateState({ ...INITIAL_STATE });
   }, [updateState]);
 
-  const handleSave = useCallback(async () => {
-    const dataUrl = await exportPng();
-    if (!dataUrl) return;
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = "framerly-shot.png";
-    a.click();
-  }, [exportPng]);
+  const handleSave = useCallback(
+    async (options: ExportOptions) => {
+      const dataUrl = await exportImage(options);
+      if (!dataUrl) return;
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `framerly-shot.${options.format.toLowerCase()}`;
+      a.click();
+    },
+    [exportImage],
+  );
 
   const handleCopy = useCallback(async () => {
-    const dataUrl = await exportPng();
+    // The Copy button has no resolution picker attached to it, so we use
+    // sensible fixed defaults (PNG for clipboard compatibility, 2x for a
+    // crisp paste).
+    const dataUrl = await exportImage({
+      format: "PNG",
+      quality: 0.85,
+      scale: 2,
+    });
     if (!dataUrl) return;
     try {
       const res = await fetch(dataUrl);
@@ -226,7 +281,7 @@ export default function StudioPage() {
         new ClipboardItem({ [blob.type]: blob }),
       ]);
     } catch {}
-  }, [exportPng]);
+  }, [exportImage]);
 
   const handleDeleteLayer = useCallback(
     (id: LayerItem["id"]) => {
