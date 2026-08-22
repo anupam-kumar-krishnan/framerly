@@ -33,9 +33,6 @@ const fadeUp: Variants = {
 const NOISE_URL =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
-// Device-frame chips shown in the "Frames" tile's horizontal marquee.
-// Each has its own width/height so the row reads like a real mix of device
-// shapes (a phone is narrower + taller than a laptop, etc).
 const FRAME_TYPES = [
   { key: "terminal", label: "Terminal", width: "w-24", height: "h-16" },
   { key: "macbook", label: "MacBook", width: "w-28", height: "h-16" },
@@ -63,12 +60,7 @@ const BG_CANVAS_FILLS = [
   "transparent",
 ];
 
-// How far (in px, in page space) the cursor's influence reaches. Any tile
-// edge farther than this from the cursor gets zero glow; closer edges fade
-// in smoothly, so a single cursor position can light up the touching
-// corners/edges of several adjacent tiles at once.
 const GLOW_MAX_DISTANCE = 340;
-// Radius of the radial-gradient itself (independent of the falloff above).
 const GLOW_RADIUS = 300;
 
 export default function BentoFeatures() {
@@ -81,13 +73,6 @@ export default function BentoFeatures() {
     [],
   );
 
-  // Single mousemove handler on the whole grid. For every tile we compute
-  // (a) the cursor position in that tile's own local coordinate space (used
-  // to position the radial-gradient — this can legally be negative or
-  // beyond the tile's own width/height) and (b) an intensity that falls off
-  // with the shortest distance from the cursor to the tile's rectangle.
-  // Style is written directly via refs (no React state) so this stays smooth
-  // at 60fps without re-rendering the tree on every pixel of movement.
   const handleGridMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const px = e.clientX;
@@ -233,9 +218,6 @@ type TileProps = {
   children: React.ReactNode;
 };
 
-// forwardRef so the parent grid can read this tile's DOM node directly and
-// write --glow-x / --glow-y / --glow-intensity onto it from the shared
-// mousemove handler above (see BentoFeatures).
 const Tile = forwardRef<HTMLDivElement, TileProps>(function Tile(
   { eyebrow, title, desc, className = "", children },
   ref,
@@ -257,7 +239,6 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(function Tile(
       }
       className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-800/80 bg-neutral-950 p-6 ${className}`}
     >
-      {/* soft interior wash — position + intensity driven by the shared cursor tracker, so this brightens as the cursor approaches this tile from anywhere on the grid, not just while directly over it */}
       <div
         className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300 ease-out"
         style={{
@@ -357,9 +338,7 @@ function FrameTexture({ kind }: { kind: string }) {
   if (kind === "macbook") {
     return (
       <div className="flex h-full w-full flex-col items-center justify-end">
-        {/* screen — intentionally narrower than the deck below it, like a real laptop viewed from the front */}
         <div className="relative flex w-[86%] flex-1 flex-col overflow-hidden rounded-t-md border border-neutral-700 bg-gradient-to-b from-neutral-800 to-neutral-950">
-          {/* camera notch — a touch lighter than pure black so it reads against the dark bezel */}
           <div className="absolute left-1/2 top-0 h-1 w-3 -translate-x-1/2 rounded-b-sm bg-neutral-600" />
 
           <div className="flex items-center gap-1 px-1.5 pt-1.5">

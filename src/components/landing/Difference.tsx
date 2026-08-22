@@ -68,7 +68,6 @@ export default function BeforeAfterTerminalSection({
 
   return (
     <section className="relative bg-[#0a0a0b] py-28 sm:py-36 px-6 overflow-hidden">
-      {/* ambient glow, consistent with the studio canvas above */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-0 h-[560px] w-[900px] -translate-x-1/2 -translate-y-1/3 rounded-full opacity-20 blur-[120px]"

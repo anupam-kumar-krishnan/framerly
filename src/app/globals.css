@@ -17,12 +17,10 @@
   --color-purple: #9b6bf2;
   --color-blue: #5b8def;
 
-  /* Font Families */
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
 
-  /* Background Images */
   --background-image-grad-accent: linear-gradient(90deg, #ff8a3d, #ffc24b);
   --background-image-grad-studio: linear-gradient(
     135deg,
@@ -31,7 +29,6 @@
     #ff8a3d
   );
 
-  /* Animations & Keyframes */
   --animate-marquee: marquee 26s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-breathe: breathe 7s ease-in-out infinite;
@@ -140,7 +137,6 @@ body {
   font-family: var(--font-mono), ui-monospace, monospace;
 }
 
-/* Grain overlay used behind the hero to keep the black from feeling flat */
 .grain {
   position: absolute;
   inset: 0;
@@ -200,10 +196,6 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
-/* Firefox draws its own track behind the thumb; make it transparent so the
-   inline gradient fill (background set per-input in LeftPanel.tsx, based
-   on the current value) shows through the same way it does in Chrome/
-   Safari, instead of Firefox's flat --line track hiding it. */
 input[type="range"]::-moz-range-track {
   background: transparent;
 }

@@ -50,12 +50,10 @@ export default function Hero() {
 
   return (
     <section className="relative overflow-hidden px-6 pb-10 pt-20 md:pt-28">
-      {/* ambient glow */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-1/2 top-[-10%] h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-accent/10 blur-[130px]" />
       </div>
 
-      {/* centered copy */}
       <div className="mx-auto max-w-2xl text-center">
         <motion.div
           initial={{ opacity: 0, y: 14 }}

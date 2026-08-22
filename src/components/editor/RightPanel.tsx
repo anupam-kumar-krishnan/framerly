@@ -8,6 +8,7 @@ import {
   Shapes,
   Download,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { toCanvas } from "html-to-image";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
@@ -21,8 +22,6 @@ import {
   SHADOW_CSS,
   ShadowPreset,
 } from "./types";
-// Only used for its prop-shape via `Parameters<typeof MockupComposition>`
-// below — it is no longer rendered directly in this panel.
 import { MockupComposition } from "@/remotion/MockupComposition";
 import { ANIMATION_GROUPS, AnimationPreset } from "@/remotion/animationPresets";
 import { AnimationClip, FPS } from "@/remotion/animationClips";
@@ -398,8 +397,6 @@ function MotionPanel({
 
       recorder.start();
 
-      // Start from the exact first frame. The real editor canvas re-renders
-      // in response to `onAnimationFrame`, which is what we capture below.
       onAnimationFrame(0);
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -408,7 +405,6 @@ function MotionPanel({
       for (let frame = 0; frame < durationInFrames; frame++) {
         onAnimationFrame(frame);
 
-        // Wait until React has committed the frame and the browser has painted it.
         await new Promise<void>((resolve) =>
           requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
         );
@@ -521,6 +517,17 @@ function MotionPanel({
                         <span className="absolute right-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-mono text-white/80">
                           {(p.durationMs / 1000).toFixed(1)}s
                         </span>
+
+                        {/* Hover overlay: centered glassmorphism square with Plus icon */}
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-md border border-white bg-white/10 backdrop-blur-md">
+                            <Plus
+                              size={18}
+                              className="text-white"
+                              strokeWidth={2.5}
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       <span className="block px-2.5 py-1.5 text-[11px] text-ink-dim transition group-hover:text-ink">
@@ -585,15 +592,9 @@ export default function RightPanel({
   codeSnippet: CodeSnippetState;
   device: DeviceType;
 
-  /*
-   * Ref of the MAIN CENTER CANVAS.
-   */
   canvasRef: React.RefObject<HTMLDivElement | null>;
-  /** The clips currently placed on the timeline, in order. */
   animationClips: AnimationClip[];
-  /** Appends a new clip built from this preset to the end of the timeline. */
   onAddAnimationClip: (preset: AnimationPreset) => void;
-  /** Combined length (frames) of the whole clip sequence. */
   totalFrames: number;
   onAnimationFrame: (frame: number) => void;
   onVideoExporting: (value: boolean) => void;

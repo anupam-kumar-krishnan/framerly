@@ -10,7 +10,6 @@ import {
 } from "react";
 import { toPng } from "html-to-image";
 import {
-  ChevronUp,
   Image as ImageIcon,
   Pause,
   Play,
@@ -106,6 +105,10 @@ const INITIAL_STATE: EditorState = {
 const MERGE_WINDOW_MS = 400;
 const HISTORY_LIMIT = 100;
 
+const PIXELS_PER_SECOND = 90;
+
+const TRACK_CONTENT_OFFSET = 112 + 8;
+
 type HistoryState = { entries: EditorState[]; index: number };
 
 type HistoryAction =
@@ -149,6 +152,97 @@ function historyReducer(
 function formatTime(seconds: number) {
   const s = Math.max(0, seconds);
   return `0:${Math.floor(s).toString().padStart(2, "0")}`;
+}
+
+function TimeRuler({ durationSeconds }: { durationSeconds: number }) {
+  const totalSeconds = Math.max(4, Math.ceil(durationSeconds) + 1);
+  const ticks = Array.from({ length: totalSeconds }, (_, i) => i);
+
+  return (
+    <div className="flex items-stretch border-b border-line-soft">
+      <div className="w-28 shrink-0 border-r border-line-soft" />
+
+      <div className="relative flex-1 overflow-hidden">
+        <div
+          className="relative h-6"
+          style={{ width: totalSeconds * PIXELS_PER_SECOND }}
+        >
+          {ticks.map((sec) => (
+            <div
+              key={sec}
+              className="absolute top-0 flex h-full flex-col items-start justify-center gap-1"
+              style={{ left: sec * PIXELS_PER_SECOND }}
+            >
+              <span className="font-mono text-[10px] text-ink-faint">
+                {formatTime(sec)}
+              </span>
+              <span className="h-1 w-px bg-line" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Playhead({
+  currentSeconds,
+  leftPx,
+  durationFrames,
+  onSeek,
+}: {
+  currentSeconds: number;
+  leftPx: number;
+  durationFrames: number;
+  onSeek: (frame: number) => void;
+}) {
+  const handleDragStart = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    (e.target as Element).setPointerCapture(e.pointerId);
+
+    const startX = e.clientX;
+    const startSeconds = currentSeconds;
+
+    const handleMove = (ev: PointerEvent) => {
+      const deltaSeconds = (ev.clientX - startX) / PIXELS_PER_SECOND;
+      const nextSeconds = Math.max(0, startSeconds + deltaSeconds);
+      const nextFrame = Math.round(nextSeconds * FPS);
+      onSeek(Math.min(durationFrames - 1, Math.max(0, nextFrame)));
+    };
+
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  };
+
+  return (
+    <div
+      className="absolute top-0 bottom-0 z-20 flex flex-col items-center"
+      style={{ left: leftPx, transform: "translateX(-50%)" }}
+    >
+      <span
+        onPointerDown={handleDragStart}
+        className="cursor-ew-resize select-none whitespace-nowrap rounded-full bg-white px-2 py-0.5 font-mono text-[10px] font-semibold text-void shadow"
+      >
+        {formatTime(currentSeconds)}
+      </span>
+
+      <div
+        onPointerDown={handleDragStart}
+        className="mt-0.5 w-px flex-1 bg-white/90"
+      />
+
+      <div
+        onPointerDown={handleDragStart}
+        className="absolute inset-y-0 -left-2 -right-2 cursor-ew-resize"
+      />
+    </div>
+  );
 }
 
 function TimelineBar({
@@ -253,7 +347,16 @@ function TimelineBar({
         </button>
       </div>
 
-      <div className="flex max-h-32 flex-col overflow-y-auto scrollbar-thin">
+      <div className="relative flex max-h-32 flex-col overflow-y-auto scrollbar-thin">
+        <TimeRuler durationSeconds={durationSeconds} />
+
+        <Playhead
+          currentSeconds={currentSeconds}
+          leftPx={TRACK_CONTENT_OFFSET + currentSeconds * PIXELS_PER_SECOND}
+          durationFrames={durationFrames}
+          onSeek={onSeek}
+        />
+
         <div className="flex items-stretch border-b border-line-soft">
           <div className="flex w-28 shrink-0 items-center gap-1.5 border-r border-line-soft px-3 py-2 text-xs text-ink-dim">
             <Wand2 size={12} />
@@ -313,17 +416,14 @@ export default function StudioPage() {
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Right-panel tab (3D vs Motion) — lifted up so the timeline bar's
-  // "Add Animation" button can switch to the Motion tab.
   const [mode, setMode] = useState<"3d" | "flat">("3d");
 
-  // Timeline is now a sequence of clips rather than a single active preset.
   const [animationClips, setAnimationClips] = useState<AnimationClip[]>([]);
   const [animationFrame, setAnimationFrame] = useState(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [loopEnabled, setLoopEnabled] = useState(true);
-  const [timelineOpen, setTimelineOpen] = useState(true);
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   const hasAnimationClip = animationClips.length > 0;
 
@@ -377,9 +477,6 @@ export default function StudioPage() {
     return `${animationClips.length} clips`;
   }, [animationClips]);
 
-  // Plays the clip sequence directly on the real center canvas.
-  // Runs only while `isPlaying` is true, resuming from the current frame
-  // rather than restarting from 0 each time playback is toggled.
   useEffect(() => {
     if (isVideoExporting || !isPlaying || !hasAnimationClip) return;
 
@@ -522,8 +619,14 @@ export default function StudioPage() {
     setTimelineOpen(true);
   }, []);
 
-  // Called from RightPanel's Motion tab when the user picks a preset —
-  // appends it to the clip sequence and plays the result back.
+  const handleToggleAnimate = useCallback(() => {
+    setTimelineOpen((v) => {
+      const next = !v;
+      if (next) setMode("flat");
+      return next;
+    });
+  }, []);
+
   const handleAddAnimationClip = useCallback((preset: AnimationPreset) => {
     setAnimationClips((prev) => [...prev, createClipFromPreset(preset)]);
     setAnimationFrame(0);
@@ -566,6 +669,8 @@ export default function StudioPage() {
         onToggleRulers={() => setShowRulers((v) => !v)}
         showGrid={showGrid}
         onToggleGrid={() => setShowGrid((v) => !v)}
+        animateOpen={timelineOpen}
+        onToggleAnimate={handleToggleAnimate}
       />
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel
@@ -626,7 +731,7 @@ export default function StudioPage() {
             />
           </div>
 
-          {timelineOpen ? (
+          {timelineOpen && (
             <TimelineBar
               hasAnimationClip={hasAnimationClip}
               activePresetLabel={activePresetLabel}
@@ -645,14 +750,6 @@ export default function StudioPage() {
               assetLabel={assetLabel}
               assetSubLabel={assetSubLabel}
             />
-          ) : (
-            <button
-              onClick={() => setTimelineOpen(true)}
-              className="flex shrink-0 items-center justify-center gap-1.5 border-t border-line-soft bg-panel py-1.5 text-xs text-ink-faint transition hover:text-ink"
-            >
-              <ChevronUp size={12} />
-              Show timeline
-            </button>
           )}
         </div>
 

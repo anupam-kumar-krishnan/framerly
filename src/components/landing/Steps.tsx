@@ -37,7 +37,7 @@ const steps = [
 export default function ThreeStepsSection() {
   return (
     <section className="relative bg-[#0a0a0b] py-24 px-6 overflow-hidden">
-      {/* ambient glow, consistent with the rest of the dark sections */}
+     
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 -translate-y-1/3 rounded-full opacity-15 blur-[120px]"

@@ -73,9 +73,6 @@ export const ANIMATION_GROUPS: { title: string; presets: AnimationPreset[] }[] =
           label: "Simple Fade",
           kind: "fade",
           durationMs: 900,
-          // `transform: "none"` is explicit so this clip can't inherit a
-          // lingering translate/scale left over from a preceding clip in
-          // the sequence (e.g. Slide In Left -> Simple Fade).
           keyframes: (p) => ({ opacity: ease(p), transform: "none" }),
         },
       ],

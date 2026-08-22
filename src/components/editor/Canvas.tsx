@@ -174,7 +174,6 @@ export default function Canvas({
   const viewportRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
-  // --- Movable / selectable frame state -----------------------------------
   const frameRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });

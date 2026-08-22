@@ -59,9 +59,7 @@ function PreviewWindow({
     <div className={`rounded-[28px] p-6 sm:p-7 ${frameBackground[frame]}`}>
       <div className="relative overflow-hidden rounded-2xl bg-neutral-950 shadow-2xl shadow-black/50 ring-1 ring-white/10">
         <div className="relative p-3">
-          {/* title bar */}
           <div className="mb-3 flex items-center gap-2 rounded-lg bg-neutral-900/80 px-2.5 py-1.5 backdrop-blur">
-            {/* classic macOS traffic lights */}
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
@@ -79,7 +77,7 @@ function PreviewWindow({
   );
 }
 
-/** Dashboard 1 — web analytics (Northwind) */
+/** Dashboard 1 — web analytics */
 function AnalyticsDashboard() {
   return (
     <>

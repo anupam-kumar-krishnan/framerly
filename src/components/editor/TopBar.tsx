@@ -15,6 +15,7 @@ import {
   Wand2,
   Video,
   Trash2,
+  Play,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ASPECTS, AspectRatio } from "./types";
@@ -135,6 +136,8 @@ export default function TopBar({
   onToggleRulers,
   showGrid,
   onToggleGrid,
+  animateOpen,
+  onToggleAnimate,
   templatesHref = "/templates",
   onExportVideo,
   onRemove,
@@ -155,6 +158,9 @@ export default function TopBar({
   onToggleRulers: () => void;
   showGrid: boolean;
   onToggleGrid: () => void;
+
+  animateOpen: boolean;
+  onToggleAnimate: () => void;
 
   templatesHref?: string;
 
@@ -219,6 +225,21 @@ export default function TopBar({
         >
           <Grid3x3 size={14} />
         </ToolbarIconButton>
+
+        <span className="mx-1.5 h-4 w-px bg-line-soft" />
+
+        <button
+          onClick={onToggleAnimate}
+          title="Toggle animation timeline"
+          className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition ${
+            animateOpen
+              ? "border-amber/60 bg-amber/10 text-amber"
+              : "border-line text-ink-dim hover:border-ink-faint hover:text-ink"
+          }`}
+        >
+          <Play size={13} />
+          Animate
+        </button>
 
         <span className="mx-1.5 h-4 w-px bg-line-soft" />
 

@@ -46,7 +46,6 @@ const frames: {
 export default function FrameStack() {
   return (
     <div className="relative mx-auto h-[420px] w-full max-w-lg sm:h-[480px]">
-      {/* safelight glow */}
       <div
         className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-40 blur-[90px]"
         style={{ background: "var(--amber)" }}
