@@ -177,6 +177,54 @@ export default function TopBar({
   const [aspectOpen, setAspectOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.platform));
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      const isMod = e.ctrlKey || e.metaKey;
+      if (!isMod) return;
+
+      const key = e.key.toLowerCase();
+
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) onUndo();
+        return;
+      }
+
+      if (key === "z" && e.shiftKey) {
+        e.preventDefault();
+        if (canRedo) onRedo();
+        return;
+      }
+
+      if (key === "y") {
+        e.preventDefault();
+        if (canRedo) onRedo();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onUndo, onRedo, canUndo, canRedo]);
+
+  const undoLabel = isMac ? "Undo (⌘Z)" : "Undo (Ctrl+Z)";
+  const redoLabel = isMac
+    ? "Redo (⌘Y or ⌘⇧Z)"
+    : "Redo (Ctrl+Y or Ctrl+Shift+Z)";
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-line-soft bg-panel px-4">
@@ -202,10 +250,18 @@ export default function TopBar({
       </div>
 
       <div className="flex items-center gap-0.5">
-        <ToolbarIconButton onClick={onUndo} disabled={!canUndo} title="Undo">
+        <ToolbarIconButton
+          onClick={onUndo}
+          disabled={!canUndo}
+          title={undoLabel}
+        >
           <Undo2 size={14} />
         </ToolbarIconButton>
-        <ToolbarIconButton onClick={onRedo} disabled={!canRedo} title="Redo">
+        <ToolbarIconButton
+          onClick={onRedo}
+          disabled={!canRedo}
+          title={redoLabel}
+        >
           <Redo2 size={14} />
         </ToolbarIconButton>
 

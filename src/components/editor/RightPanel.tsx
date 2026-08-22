@@ -343,9 +343,6 @@ function DotMatrixLoader() {
       const x = c * gapX - rowWidth / 2;
       const y = (r - (rowCounts.length - 1) / 2) * gapY;
 
-      // idx * 7 mod total is a coprime step through 0..total-1, giving a
-      // fixed but scrambled (non-sequential) spread of start delays so the
-      // twinkle reads as organic sparkle rather than a clean sweep.
       const delay = ((idx * 7) % total) / total;
 
       dots.push({
@@ -429,10 +426,6 @@ function ConfettiBurst() {
           style={
             {
               position: "absolute",
-              // Absolutely-positioned children of a flex container don't
-              // reliably land at the centered "static position" across
-              // browsers — pin each particle to the exact center explicitly
-              // instead of depending on the parent's flex centering.
               left: `calc(50% - ${p.size / 2}px)`,
               top: `calc(50% - ${p.size / 2}px)`,
               width: p.size,
@@ -626,8 +619,6 @@ function MotionPanel({
   const cancelledRef = useRef(false);
 
   const handleCancelExport = () => {
-    // Flag checked inside the per-frame loop below; the export routine
-    // handles its own teardown once it notices the flag is set.
     cancelledRef.current = true;
   };
 
@@ -645,12 +636,6 @@ function MotionPanel({
     try {
       const durationInFrames = Math.max(1, totalFrames);
 
-      // Measure the actual rendered size of the canvas element instead of
-      // assuming CANVAS_REFERENCE_WIDTH/HEIGHT. Forcing toCanvas to a fixed
-      // width/height that didn't match the element's real aspect ratio was
-      // what caused the black letterboxed border on export — html-to-image
-      // doesn't rescale content to fit a mismatched target size, it just
-      // leaves the extra space blank.
       const rect = captureEl.getBoundingClientRect();
       const pixelRatio = 2;
       const outputWidth = Math.round(rect.width * pixelRatio);
@@ -667,11 +652,6 @@ function MotionPanel({
         throw new Error("Could not get 2D context for export canvas");
       }
 
-      // Auto-sample at the target FPS instead of manually calling
-      // requestFrame() after every (variably slow) toCanvas() capture —
-      // that manual pacing was what made the exported video choppy, since
-      // each recorded frame's on-screen duration was however long that
-      // particular capture happened to take, not a consistent frame time.
       const stream = recordCanvas.captureStream(FPS);
       const track = stream.getVideoTracks()[0] as
         | CanvasCaptureMediaStreamTrack
@@ -739,9 +719,6 @@ function MotionPanel({
         ctx.clearRect(0, 0, outputWidth, outputHeight);
         ctx.drawImage(frameCanvas, 0, 0, outputWidth, outputHeight);
 
-        // Hold each canvas update until its proper slot on the FPS grid so
-        // captureStream(FPS) samples evenly-spaced, correctly-timed frames
-        // rather than drifting with however long each capture took.
         const targetElapsed = (frame + 1) * frameDurationMs;
         const actualElapsed = performance.now() - exportStart;
         if (actualElapsed < targetElapsed) {
@@ -756,8 +733,6 @@ function MotionPanel({
       if (!wasCancelled) {
         setStage("finalizing");
 
-        // Give the auto-sampling stream one more tick to pick up the final
-        // frame before we stop recording.
         await new Promise((resolve) =>
           setTimeout(resolve, frameDurationMs * 2),
         );
@@ -776,9 +751,6 @@ function MotionPanel({
 
         setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-        // Hold the modal at 100% briefly so the success checkmark and
-        // confetti burst are actually visible before it closes — without
-        // this the modal was unmounting mid-animation.
         await new Promise((resolve) => setTimeout(resolve, 1100));
       }
     } catch (err) {
