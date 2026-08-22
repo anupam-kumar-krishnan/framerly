@@ -121,7 +121,7 @@ export default function Hero() {
             whileTap={{ y: 0 }}
             className="rounded-xl bg-grad-accent px-5 py-3 text-sm font-semibold text-[#160c04]"
           >
-            Open the studio →
+            Open the Studio →
           </motion.a>
           <motion.a
             href="#gallery"
