@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { toPng } from "html-to-image";
 import {
   ChevronUp,
@@ -33,7 +40,14 @@ import {
 } from "@/components/editor/types";
 import { toast } from "sonner";
 import { PageTheme } from "./types";
-import { ANIMATION_GROUPS, AnimationPreset } from "@/remotion/animationPresets";
+import { AnimationPreset, getPreset } from "@/remotion/animationPresets";
+import {
+  AnimationClip,
+  FPS,
+  createClipFromPreset,
+  resolveAnimationStyle,
+  totalClipFrames,
+} from "@/remotion/animationClips";
 
 type EditorState = {
   device: DeviceType;
@@ -91,7 +105,6 @@ const INITIAL_STATE: EditorState = {
 
 const MERGE_WINDOW_MS = 400;
 const HISTORY_LIMIT = 100;
-const FPS = 30;
 
 type HistoryState = { entries: EditorState[]; index: number };
 
@@ -304,15 +317,15 @@ export default function StudioPage() {
   // "Add Animation" button can switch to the Motion tab.
   const [mode, setMode] = useState<"3d" | "flat">("3d");
 
-  const [activeAnimationPreset, setActiveAnimationPreset] =
-    useState<AnimationPreset>(ANIMATION_GROUPS[0].presets[0]);
+  // Timeline is now a sequence of clips rather than a single active preset.
+  const [animationClips, setAnimationClips] = useState<AnimationClip[]>([]);
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Bottom timeline bar state.
-  const [hasAnimationClip, setHasAnimationClip] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loopEnabled, setLoopEnabled] = useState(true);
   const [timelineOpen, setTimelineOpen] = useState(true);
+
+  const hasAnimationClip = animationClips.length > 0;
 
   const animationFrameRef = useRef(0);
   useEffect(() => {
@@ -347,14 +360,24 @@ export default function StudioPage() {
   const canUndo = historyState.index > 0;
   const canRedo = historyState.index < historyState.entries.length - 1;
 
-  const durationFrames = Math.max(
-    1,
-    Math.ceil((activeAnimationPreset.durationMs / 1000) * FPS),
-  );
+  const durationFrames = totalClipFrames(animationClips);
   const durationSeconds = durationFrames / FPS;
   const currentSeconds = animationFrame / FPS;
 
-  // Plays the selected motion preset directly on the real center canvas.
+  const animationStyle = useMemo(
+    () => resolveAnimationStyle(animationFrame, animationClips),
+    [animationFrame, animationClips],
+  );
+
+  const activePresetLabel = useMemo(() => {
+    if (animationClips.length === 0) return "";
+    if (animationClips.length === 1) {
+      return getPreset(animationClips[0].presetId).label;
+    }
+    return `${animationClips.length} clips`;
+  }, [animationClips]);
+
+  // Plays the clip sequence directly on the real center canvas.
   // Runs only while `isPlaying` is true, resuming from the current frame
   // rather than restarting from 0 each time playback is toggled.
   useEffect(() => {
@@ -393,8 +416,6 @@ export default function StudioPage() {
     isPlaying,
     hasAnimationClip,
     loopEnabled,
-    activeAnimationPreset.id,
-    activeAnimationPreset.durationMs,
     durationFrames,
     isVideoExporting,
   ]);
@@ -501,8 +522,17 @@ export default function StudioPage() {
     setTimelineOpen(true);
   }, []);
 
+  // Called from RightPanel's Motion tab when the user picks a preset —
+  // appends it to the clip sequence and plays the result back.
+  const handleAddAnimationClip = useCallback((preset: AnimationPreset) => {
+    setAnimationClips((prev) => [...prev, createClipFromPreset(preset)]);
+    setAnimationFrame(0);
+    setIsPlaying(true);
+    setTimelineOpen(true);
+  }, []);
+
   const handleDeleteAnimation = useCallback(() => {
-    setHasAnimationClip(false);
+    setAnimationClips([]);
     setIsPlaying(false);
     setAnimationFrame(0);
   }, []);
@@ -585,8 +615,7 @@ export default function StudioPage() {
               onRemoveImage={() => updateState({ image: null })}
               canvasRef={canvasRef}
               isExporting={isExporting || isVideoExporting}
-              animationPresetId={activeAnimationPreset.id}
-              animationFrame={animationFrame}
+              animationStyle={animationStyle}
               contentMode={state.contentMode}
               codeSnippet={state.codeSnippet}
               onRemoveCode={() => updateState({ contentMode: "website" })}
@@ -594,14 +623,13 @@ export default function StudioPage() {
               showGrid={showGrid}
               layers={state.layers}
               pageTheme={pageTheme}
-              hasAnimationClip={hasAnimationClip}
             />
           </div>
 
           {timelineOpen ? (
             <TimelineBar
               hasAnimationClip={hasAnimationClip}
-              activePresetLabel={activeAnimationPreset.label}
+              activePresetLabel={activePresetLabel}
               isPlaying={isPlaying}
               onPlayToggle={handlePlayToggle}
               currentSeconds={currentSeconds}
@@ -656,14 +684,9 @@ export default function StudioPage() {
           codeSnippet={state.codeSnippet}
           device={state.device}
           canvasRef={canvasRef}
-          activeAnimationPreset={activeAnimationPreset}
-          onAnimationPreset={(preset) => {
-            setActiveAnimationPreset(preset);
-            setAnimationFrame(0);
-            setHasAnimationClip(true);
-            setIsPlaying(true);
-            setTimelineOpen(true);
-          }}
+          animationClips={animationClips}
+          onAddAnimationClip={handleAddAnimationClip}
+          totalFrames={durationFrames}
           onAnimationFrame={setAnimationFrame}
           onVideoExporting={setIsVideoExporting}
         />
