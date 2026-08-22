@@ -1,7 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { toPng } from "html-to-image";
+import {
+  ChevronUp,
+  Image as ImageIcon,
+  Pause,
+  Play,
+  Plus,
+  Repeat,
+  Trash2,
+  Wand2,
+  X,
+} from "lucide-react";
 import TopBar from "@/components/editor/TopBar";
 import LeftPanel from "@/components/editor/LeftPanel";
 import Canvas from "@/components/editor/Canvas";
@@ -22,10 +40,16 @@ import {
 } from "@/components/editor/types";
 import { toast } from "sonner";
 import { PageTheme } from "@/components/editor/LeftPanel";
+import { AnimationPreset, getPreset } from "@/remotion/animationPresets";
 import {
-  ANIMATION_GROUPS,
-  type AnimationPreset,
-} from "@/remotion/animationPresets";
+  AnimationClip,
+  FPS,
+  clipFrames,
+  createClipFromPreset,
+  resolveAnimationStyle,
+  startFrameOfClip,
+  totalClipFrames,
+} from "@/remotion/animationClips";
 import MobileStudioNotice from "@/components/shared/MobileStudioNotice";
 
 type EditorState = {
@@ -85,6 +109,10 @@ const INITIAL_STATE: EditorState = {
 const MERGE_WINDOW_MS = 400;
 const HISTORY_LIMIT = 100;
 
+// Pixels per second of timeline — controls how wide each clip block renders.
+const PIXELS_PER_SECOND = 90;
+const MIN_CLIP_MS = 300;
+
 type HistoryState = { entries: EditorState[]; index: number };
 
 type HistoryAction =
@@ -135,37 +163,258 @@ function historyReducer(
   }
 }
 
+function formatTime(seconds: number) {
+  const s = Math.max(0, seconds);
+  return `0:${Math.floor(s).toString().padStart(2, "0")}`;
+}
+
 /**
- * Always return a valid animation preset.
- *
- * This intentionally does not trust ANIMATION_GROUPS[0].presets[0]
- * to exist at runtime. If the animation preset list is ever empty,
- * Canvas still receives a valid object and cannot crash on durationMs.
+ * A single clip block on the animations track: shows preset label +
+ * duration, can be selected, deleted (X on hover, top-right), and resized
+ * by dragging its right edge.
  */
-const FALLBACK_ANIMATION_PRESET: AnimationPreset = {
-  id: "fallback",
-  label: "Fallback",
-  kind: "fade",
-  durationMs: 1000,
-  keyframes: (progress: number) => ({
-    opacity: progress,
-  }),
-};
+function ClipBlock({
+  clip,
+  isSelected,
+  onSelect,
+  onDelete,
+  onResize,
+}: {
+  clip: AnimationClip;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+  onResize: (durationMs: number) => void;
+}) {
+  const preset = getPreset(clip.presetId);
+  const widthPx = Math.max(40, (clipFrames(clip) / FPS) * PIXELS_PER_SECOND);
 
-function getDefaultAnimationPreset(): AnimationPreset {
-  for (const group of ANIMATION_GROUPS ?? []) {
-    const preset = group?.presets?.[0];
+  const handleResizeStart = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    (e.target as Element).setPointerCapture(e.pointerId);
 
-    if (
-      preset &&
-      typeof preset.durationMs === "number" &&
-      typeof preset.keyframes === "function"
-    ) {
-      return preset;
-    }
-  }
+    const startX = e.clientX;
+    const startDuration = clip.durationMs;
 
-  return FALLBACK_ANIMATION_PRESET;
+    const handleMove = (ev: PointerEvent) => {
+      const deltaMs = ((ev.clientX - startX) / PIXELS_PER_SECOND) * 1000;
+      onResize(Math.max(MIN_CLIP_MS, Math.round(startDuration + deltaMs)));
+    };
+
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  };
+
+  return (
+    <div
+      onClick={onSelect}
+      style={{ width: widthPx }}
+      className={`group relative flex h-7 shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 text-[11px] font-medium text-void transition ${
+        isSelected
+          ? "bg-gradient-to-r from-amber to-amber/70 ring-2 ring-amber"
+          : "bg-gradient-to-r from-amber/90 to-amber/50"
+      }`}
+    >
+      <span className="truncate">{preset.label}</span>
+      <span className="ml-1 shrink-0 font-mono text-[10px] opacity-70">
+        {(clip.durationMs / 1000).toFixed(1)}s
+      </span>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        title="Remove clip"
+        className="absolute -right-1.5 -top-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-void bg-white text-void shadow group-hover:flex"
+      >
+        <X size={10} />
+      </button>
+
+      <div
+        onPointerDown={handleResizeStart}
+        title="Drag to resize"
+        className="absolute -right-1 top-0 flex h-full w-3 cursor-ew-resize items-center justify-end opacity-0 group-hover:opacity-100"
+      >
+        <div className="h-4 w-1 rounded bg-void/40" />
+      </div>
+    </div>
+  );
+}
+
+function TimelineBar({
+  clips,
+  selectedClipId,
+  onSelectClip,
+  onDeleteClip,
+  onResizeClip,
+  isPlaying,
+  onPlayToggle,
+  currentSeconds,
+  durationSeconds,
+  currentFrame,
+  durationFrames,
+  onSeek,
+  onAddAnimation,
+  onDeleteSelected,
+  onClose,
+  loopEnabled,
+  onToggleLoop,
+  assetLabel,
+  assetSubLabel,
+}: {
+  clips: AnimationClip[];
+  selectedClipId: string | null;
+  onSelectClip: (id: string) => void;
+  onDeleteClip: (id: string) => void;
+  onResizeClip: (id: string, durationMs: number) => void;
+  isPlaying: boolean;
+  onPlayToggle: () => void;
+  currentSeconds: number;
+  durationSeconds: number;
+  currentFrame: number;
+  durationFrames: number;
+  onSeek: (frame: number) => void;
+  onAddAnimation: () => void;
+  onDeleteSelected: () => void;
+  onClose: () => void;
+  loopEnabled: boolean;
+  onToggleLoop: () => void;
+  assetLabel: string;
+  assetSubLabel: string;
+}) {
+  const hasAnimationClip = clips.length > 0;
+
+  return (
+    <div className="flex shrink-0 flex-col border-t border-line-soft bg-panel">
+      <div className="flex items-center gap-3 border-b border-line-soft px-4 py-2.5">
+        <button
+          onClick={onAddAnimation}
+          className="flex items-center gap-1.5 rounded-md border border-line bg-panel-2 px-3 py-1.5 text-xs font-medium text-ink transition hover:border-amber/50"
+        >
+          <Plus size={14} />
+          Add Animation
+        </button>
+
+        <button
+          onClick={onToggleLoop}
+          title="Loop playback"
+          className={`rounded-md p-1.5 transition ${
+            loopEnabled ? "text-amber" : "text-ink-faint hover:text-ink-dim"
+          }`}
+        >
+          <Repeat size={14} />
+        </button>
+
+        <div className="flex flex-1 items-center justify-center">
+          <button
+            onClick={onPlayToggle}
+            disabled={!hasAnimationClip}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-panel-2 text-ink transition hover:bg-panel-2/70 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isPlaying ? (
+              <Pause size={14} />
+            ) : (
+              <Play size={14} className="ml-0.5" />
+            )}
+          </button>
+        </div>
+
+        <span className="font-mono text-xs text-ink-dim">
+          {formatTime(currentSeconds)} / {formatTime(durationSeconds)}
+        </span>
+
+        <input
+          type="range"
+          min={0}
+          max={Math.max(0, durationFrames - 1)}
+          value={currentFrame}
+          disabled={!hasAnimationClip}
+          onChange={(e) => onSeek(Number(e.target.value))}
+          className="w-32 disabled:opacity-40"
+        />
+
+        <button
+          onClick={onDeleteSelected}
+          disabled={!selectedClipId}
+          title="Remove selected clip"
+          className="rounded-md p-1.5 text-ink-faint transition hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          <Trash2 size={14} />
+        </button>
+
+        <button
+          onClick={onClose}
+          title="Hide timeline"
+          className="rounded-md p-1.5 text-ink-faint transition hover:text-ink"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      <div className="flex max-h-32 flex-col overflow-y-auto scrollbar-thin">
+        <div className="flex items-stretch border-b border-line-soft">
+          <div className="flex w-28 shrink-0 items-center gap-1.5 border-r border-line-soft px-3 py-2 text-xs text-ink-dim">
+            <Wand2 size={12} />
+            Animations
+          </div>
+
+          <div className="relative flex-1 overflow-x-auto px-2 py-2">
+            <div className="flex items-center gap-1">
+              {clips.map((clip) => (
+                <ClipBlock
+                  key={clip.id}
+                  clip={clip}
+                  isSelected={clip.id === selectedClipId}
+                  onSelect={() => onSelectClip(clip.id)}
+                  onDelete={() => onDeleteClip(clip.id)}
+                  onResize={(ms) => onResizeClip(clip.id, ms)}
+                />
+              ))}
+
+              <button
+                onClick={onAddAnimation}
+                title="Add animation"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-dashed border-line text-ink-faint transition hover:border-amber hover:text-amber"
+              >
+                <Plus size={14} />
+              </button>
+
+              {clips.length === 0 && (
+                <div className="flex h-7 flex-1 items-center rounded-md border border-dashed border-line px-2 text-[11px] text-ink-faint">
+                  No animation yet — click Add Animation
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-stretch">
+          <div className="flex w-28 shrink-0 items-center gap-1.5 border-r border-line-soft px-3 py-2 text-xs text-ink-dim">
+            <ImageIcon size={12} />
+            Content
+          </div>
+
+          <div className="relative flex-1 px-2 py-2">
+            <div className="flex h-7 w-full items-center gap-2 rounded-md bg-panel-2 px-2 text-[11px] text-ink-dim">
+              <span className="truncate font-medium text-ink">
+                {assetLabel}
+              </span>
+              {assetSubLabel && (
+                <span className="truncate text-ink-faint">{assetSubLabel}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function StudioPage() {
@@ -186,12 +435,50 @@ export default function StudioPage() {
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const [activeAnimationPreset, setActiveAnimationPreset] =
-    useState<AnimationPreset>(getDefaultAnimationPreset);
+  // Right-panel tab (3D vs Motion) — lifted up so the timeline bar's
+  // "Add Animation" button can switch to the Motion tab.
+  const [mode, setMode] = useState<"3d" | "flat">("3d");
 
+  // --- Animation timeline state (sequential clips) ------------------------
+  const [animationClips, setAnimationClips] = useState<AnimationClip[]>([]);
+  const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
   const [animationFrame, setAnimationFrame] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [loopEnabled, setLoopEnabled] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(true);
+
+  const totalFrames = useMemo(
+    () => totalClipFrames(animationClips),
+    [animationClips],
+  );
+  const animationStyle = useMemo(
+    () => resolveAnimationStyle(animationFrame, animationClips),
+    [animationFrame, animationClips],
+  );
+  const hasAnimationClip = animationClips.length > 0;
+
+  const durationSeconds = totalFrames / FPS;
+  const currentSeconds = animationFrame / FPS;
 
   const animationRafRef = useRef<number | null>(null);
+
+  // Mutable mirrors so the RAF tick always reads fresh values without
+  // needing to be re-created (and thus reset) every time state changes.
+  const currentFrameRef = useRef(0);
+  const totalFramesRef = useRef(totalFrames);
+  const loopRef = useRef(loopEnabled);
+
+  useEffect(() => {
+    currentFrameRef.current = animationFrame;
+  }, [animationFrame]);
+
+  useEffect(() => {
+    totalFramesRef.current = totalFrames;
+  }, [totalFrames]);
+
+  useEffect(() => {
+    loopRef.current = loopEnabled;
+  }, [loopEnabled]);
 
   const updateState = useCallback((updates: Partial<EditorState>) => {
     const keys = Object.keys(updates).sort();
@@ -235,38 +522,43 @@ export default function StudioPage() {
     }
   }, []);
 
-  const playAnimation = useCallback(
-    (preset: AnimationPreset) => {
-      const safePreset =
-        preset &&
-        typeof preset.durationMs === "number" &&
-        typeof preset.keyframes === "function"
-          ? preset
-          : getDefaultAnimationPreset();
-
+  /**
+   * Drives playback from `fromFrame` across the whole clip sequence.
+   * Respects the loop toggle and stops itself (updating isPlaying) when it
+   * reaches the end of the sequence and looping is off.
+   */
+  const runLoop = useCallback(
+    (fromFrame: number) => {
       stopAnimation();
 
-      setActiveAnimationPreset(safePreset);
-      setAnimationFrame(0);
-
-      const totalFrames = Math.max(
-        1,
-        Math.ceil((safePreset.durationMs / 1000) * 30),
-      );
-
-      const startedAt = performance.now();
+      const total = Math.max(1, totalFramesRef.current);
+      let frame = fromFrame % total;
+      let lastTime = performance.now();
+      const frameDuration = 1000 / FPS;
 
       const tick = (now: number) => {
-        const elapsed = now - startedAt;
-        const frame = Math.min(totalFrames, Math.round((elapsed / 1000) * 30));
+        if (now - lastTime >= frameDuration) {
+          const elapsed = Math.floor((now - lastTime) / frameDuration);
+          const next = frame + Math.max(1, elapsed);
 
-        setAnimationFrame(frame);
+          if (next >= total) {
+            if (loopRef.current) {
+              frame = next % total;
+            } else {
+              setAnimationFrame(total - 1);
+              setIsPlaying(false);
+              animationRafRef.current = null;
+              return;
+            }
+          } else {
+            frame = next;
+          }
 
-        if (frame < totalFrames) {
-          animationRafRef.current = requestAnimationFrame(tick);
-        } else {
-          animationRafRef.current = null;
+          lastTime = now;
+          setAnimationFrame(frame);
         }
+
+        animationRafRef.current = requestAnimationFrame(tick);
       };
 
       animationRafRef.current = requestAnimationFrame(tick);
@@ -332,8 +624,10 @@ export default function StudioPage() {
   const handleReset = useCallback(() => {
     updateState({ ...INITIAL_STATE });
     stopAnimation();
-    setActiveAnimationPreset(getDefaultAnimationPreset());
+    setAnimationClips([]);
+    setSelectedClipId(null);
     setAnimationFrame(0);
+    setIsPlaying(false);
   }, [stopAnimation, updateState]);
 
   const handleSave = useCallback(async () => {
@@ -385,6 +679,102 @@ export default function StudioPage() {
     [state.contentMode, updateState],
   );
 
+  // Appends a new clip built from `preset` to the end of the sequence,
+  // selects it, jumps the playhead to its start frame, and plays from there.
+  const handleAddAnimationClip = useCallback(
+    (preset: AnimationPreset) => {
+      const clip = createClipFromPreset(preset);
+
+      setAnimationClips((prev) => {
+        const next = [...prev, clip];
+        const startFrame = startFrameOfClip(prev, prev.length);
+        totalFramesRef.current = totalClipFrames(next);
+
+        setSelectedClipId(clip.id);
+        setAnimationFrame(startFrame);
+        setIsPlaying(true);
+        setTimelineOpen(true);
+        runLoop(startFrame);
+
+        return next;
+      });
+    },
+    [runLoop],
+  );
+
+  const handleDeleteClip = useCallback(
+    (id: string) => {
+      stopAnimation();
+      setIsPlaying(false);
+      setAnimationClips((prev) => prev.filter((c) => c.id !== id));
+      setSelectedClipId((cur) => (cur === id ? null : cur));
+      setAnimationFrame(0);
+    },
+    [stopAnimation],
+  );
+
+  const handleDeleteSelectedClip = useCallback(() => {
+    if (!selectedClipId) return;
+    handleDeleteClip(selectedClipId);
+  }, [selectedClipId, handleDeleteClip]);
+
+  const handleResizeClip = useCallback((id: string, durationMs: number) => {
+    setAnimationClips((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, durationMs } : c)),
+    );
+  }, []);
+
+  const handlePlayToggle = useCallback(() => {
+    if (!hasAnimationClip) return;
+
+    if (isPlaying) {
+      stopAnimation();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      runLoop(currentFrameRef.current);
+    }
+  }, [hasAnimationClip, isPlaying, runLoop, stopAnimation]);
+
+  const handleSeek = useCallback(
+    (frame: number) => {
+      stopAnimation();
+      setIsPlaying(false);
+      setAnimationFrame(Math.min(totalFrames - 1, Math.max(0, frame)));
+    },
+    [stopAnimation, totalFrames],
+  );
+
+  const handleAddAnimation = useCallback(() => {
+    setMode("flat");
+    setTimelineOpen(true);
+  }, []);
+
+  const handleVideoExportingChange = useCallback(
+    (value: boolean) => {
+      setIsVideoExporting(value);
+      if (value) {
+        // Don't let the playback loop fight the frame-by-frame export.
+        stopAnimation();
+        setIsPlaying(false);
+      }
+    },
+    [stopAnimation],
+  );
+
+  const assetLabel =
+    state.contentMode === "code"
+      ? "Code snippet"
+      : state.image
+        ? "Screenshot"
+        : "Website";
+  const assetSubLabel =
+    state.contentMode === "code"
+      ? state.codeSnippet.language
+      : state.image
+        ? state.url || "Uploaded image"
+        : state.url;
+
   return (
     <>
       <div className="md:hidden">
@@ -406,6 +796,7 @@ export default function StudioPage() {
           onToggleRulers={() => setShowRulers((v) => !v)}
           showGrid={showGrid}
           onToggleGrid={() => setShowGrid((v) => !v)}
+          githubRepo="anupam-kumar-krishnan/framerly"
         />
 
         <div className="flex flex-1 overflow-hidden">
@@ -435,37 +826,74 @@ export default function StudioPage() {
             mainImage={state.image}
           />
 
-          <Canvas
-            device={state.device}
-            frameStyle={state.frameStyle}
-            url={state.url}
-            onUrl={(u) => updateState({ url: u })}
-            headerSize={state.headerSize}
-            shadow={state.shadow}
-            background={state.background}
-            padding={state.padding}
-            radius={state.radius}
-            zoom={state.zoom}
-            tiltX={state.tiltX}
-            tiltY={state.tiltY}
-            aspect={state.aspect}
-            image={state.image}
-            onImage={(img) => updateState({ image: img })}
-            onRemoveImage={() => updateState({ image: null })}
-            canvasRef={canvasRef}
-            isExporting={isExporting || isVideoExporting}
-            contentMode={state.contentMode}
-            codeSnippet={state.codeSnippet}
-            onRemoveCode={() => updateState({ contentMode: "website" })}
-            showRulers={showRulers}
-            showGrid={showGrid}
-            layers={state.layers}
-            pageTheme={pageTheme}
-            animationPresetId={activeAnimationPreset.id}
-            animationFrame={animationFrame}
-          />
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 overflow-hidden">
+              <Canvas
+                device={state.device}
+                frameStyle={state.frameStyle}
+                url={state.url}
+                onUrl={(u) => updateState({ url: u })}
+                headerSize={state.headerSize}
+                shadow={state.shadow}
+                background={state.background}
+                padding={state.padding}
+                radius={state.radius}
+                zoom={state.zoom}
+                tiltX={state.tiltX}
+                tiltY={state.tiltY}
+                aspect={state.aspect}
+                image={state.image}
+                onImage={(img) => updateState({ image: img })}
+                onRemoveImage={() => updateState({ image: null })}
+                canvasRef={canvasRef}
+                isExporting={isExporting || isVideoExporting}
+                animationStyle={animationStyle}
+                contentMode={state.contentMode}
+                codeSnippet={state.codeSnippet}
+                onRemoveCode={() => updateState({ contentMode: "website" })}
+                showRulers={showRulers}
+                showGrid={showGrid}
+                layers={state.layers}
+                pageTheme={pageTheme}
+              />
+            </div>
+
+            {timelineOpen ? (
+              <TimelineBar
+                clips={animationClips}
+                selectedClipId={selectedClipId}
+                onSelectClip={setSelectedClipId}
+                onDeleteClip={handleDeleteClip}
+                onResizeClip={handleResizeClip}
+                isPlaying={isPlaying}
+                onPlayToggle={handlePlayToggle}
+                currentSeconds={currentSeconds}
+                durationSeconds={durationSeconds}
+                currentFrame={animationFrame}
+                durationFrames={totalFrames}
+                onSeek={handleSeek}
+                onAddAnimation={handleAddAnimation}
+                onDeleteSelected={handleDeleteSelectedClip}
+                onClose={() => setTimelineOpen(false)}
+                loopEnabled={loopEnabled}
+                onToggleLoop={() => setLoopEnabled((v) => !v)}
+                assetLabel={assetLabel}
+                assetSubLabel={assetSubLabel}
+              />
+            ) : (
+              <button
+                onClick={() => setTimelineOpen(true)}
+                className="flex shrink-0 items-center justify-center gap-1.5 border-t border-line-soft bg-panel py-1.5 text-xs text-ink-faint transition hover:text-ink"
+              >
+                <ChevronUp size={12} />
+                Show timeline
+              </button>
+            )}
+          </div>
 
           <RightPanel
+            mode={mode}
+            onModeChange={setMode}
             zoom={state.zoom}
             onZoom={(z) => updateState({ zoom: z })}
             tiltX={state.tiltX}
@@ -491,10 +919,11 @@ export default function StudioPage() {
             codeSnippet={state.codeSnippet}
             device={state.device}
             canvasRef={canvasRef}
-            activeAnimationPreset={activeAnimationPreset}
-            onAnimationPreset={playAnimation}
+            animationClips={animationClips}
+            onAddAnimationClip={handleAddAnimationClip}
+            totalFrames={totalFrames}
             onAnimationFrame={setAnimationFrame}
-            onVideoExporting={setIsVideoExporting}
+            onVideoExporting={handleVideoExportingChange}
           />
         </div>
       </div>

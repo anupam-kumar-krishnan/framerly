@@ -27,7 +27,6 @@ import {
 } from "./types";
 import { toast } from "sonner";
 import { PageTheme } from "./LeftPanel";
-import { getPreset } from "@/remotion/animationPresets";
 
 const RULER_SIZE = 20;
 const TICK_GAP = 50;
@@ -126,8 +125,7 @@ export default function Canvas({
   onRemoveCode,
   canvasRef,
   isExporting,
-  animationPresetId,
-  animationFrame,
+  animationStyle,
   contentMode,
   codeSnippet,
   showRulers,
@@ -154,8 +152,15 @@ export default function Canvas({
   onRemoveImage: () => void;
   onRemoveCode: () => void;
   canvasRef: React.RefObject<HTMLDivElement | null>;
-  animationPresetId: string;
-  animationFrame: number;
+  /**
+   * The already-resolved CSS style for the current playhead frame, computed
+   * upstream (see `resolveAnimationStyle` in `remotion/animationClips.ts`)
+   * from whatever sequence of animation clips is on the timeline. Pass `{}`
+   * when there is no animation clip so content renders with no transform
+   * applied — this is what fixes content being invisible/offset before any
+   * animation has been added.
+   */
+  animationStyle: React.CSSProperties;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
   showRulers: boolean;
@@ -178,17 +183,6 @@ export default function Canvas({
   const [isTransforming, setIsTransforming] = useState(false);
 
   const shadowRadius = device === "iphone" ? IPHONE_OUTER_RADIUS : radius;
-
-  const animationPreset = useMemo(
-    () => getPreset(animationPresetId),
-    [animationPresetId],
-  );
-  const animationTotalFrames = Math.max(
-    1,
-    Math.ceil((animationPreset.durationMs / 1000) * 30),
-  );
-  const animationProgress = Math.min(1, animationFrame / animationTotalFrames);
-  const animationStyle = animationPreset.keyframes(animationProgress);
 
   const resetTransform = useCallback(() => {
     setPos({ x: 0, y: 0 });

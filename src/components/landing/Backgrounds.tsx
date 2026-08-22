@@ -268,9 +268,9 @@ export default function BackgroundsSection() {
           >
             {(
               [
-                { frame: "image1", url: "northwind.app" },
-                { frame: "yellowGradient", url: "northwind.app" },
-                { frame: "image2", url: "northwind.app" },
+                { frame: "image1", url: "dashboard.app" },
+                { frame: "yellowGradient", url: "dashboard.app" },
+                { frame: "image2", url: "dashboard.app" },
               ] as { frame: PreviewFrame; url: string }[]
             ).map(({ frame, url }) => (
               <motion.div

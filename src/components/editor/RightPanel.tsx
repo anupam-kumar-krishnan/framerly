@@ -9,7 +9,6 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
-import { Player, PlayerRef } from "@remotion/player";
 import { toCanvas } from "html-to-image";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
 import DeviceFrame from "@/components/shared/DeviceFrame";
@@ -22,8 +21,11 @@ import {
   SHADOW_CSS,
   ShadowPreset,
 } from "./types";
+// Only used for its prop-shape via `Parameters<typeof MockupComposition>`
+// below — it is no longer rendered directly in this panel.
 import { MockupComposition } from "@/remotion/MockupComposition";
 import { ANIMATION_GROUPS, AnimationPreset } from "@/remotion/animationPresets";
+import { AnimationClip, FPS } from "@/remotion/animationClips";
 
 type Preset = {
   label: string;
@@ -79,7 +81,6 @@ const GROUPS: { title: string; presets: Preset[] }[] = [
 
 const CANVAS_REFERENCE_WIDTH = 860;
 const CANVAS_REFERENCE_HEIGHT = (CANVAS_REFERENCE_WIDTH * 3) / 4;
-const FPS = 30;
 
 function TiltPad({
   tiltX,
@@ -318,22 +319,25 @@ function MiniStage({
 }
 
 function MotionPanel({
-  activePreset,
-  onApplyPreset,
+  clips,
+  onAddClip,
   stageProps,
   padding,
   canvasRef,
+  totalFrames,
   onAnimationFrame,
   onVideoExporting,
 }: {
-  activePreset: AnimationPreset;
-  onApplyPreset: (preset: AnimationPreset) => void;
+  clips: AnimationClip[];
+  onAddClip: (preset: AnimationPreset) => void;
   stageProps: Omit<
     Parameters<typeof MockupComposition>[0],
     "presetId" | "padding"
   >;
   padding: number;
   canvasRef: React.RefObject<HTMLDivElement | null>;
+  /** Total length (in frames, at FPS) of the full clip sequence. */
+  totalFrames: number;
   onAnimationFrame: (frame: number) => void;
   onVideoExporting: (value: boolean) => void;
 }) {
@@ -341,20 +345,7 @@ function MotionPanel({
   const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  /*
-   * The Remotion Player is still used for the right-side preview.
-   *
-   * IMPORTANT:
-   * Export no longer captures this Player.
-   * Export captures canvasRef, which points to the actual
-   * center editor canvas.
-   */
-  const playerRef = useRef<PlayerRef>(null);
-
-  const durationInFrames = Math.ceil((activePreset.durationMs / 1000) * FPS);
-
   const handleExport = async () => {
-    const player = playerRef.current;
     const captureEl = canvasRef.current;
 
     if (!captureEl) return;
@@ -364,6 +355,7 @@ function MotionPanel({
     onVideoExporting(true);
 
     try {
+      const durationInFrames = Math.max(1, totalFrames);
       const outputWidth = CANVAS_REFERENCE_WIDTH * 2;
       const outputHeight = CANVAS_REFERENCE_HEIGHT * 2;
       const recordCanvas = document.createElement("canvas");
@@ -404,19 +396,17 @@ function MotionPanel({
         recorder.onstop = () => resolve();
       });
 
-      player?.pause();
       recorder.start();
 
-      // Start from the exact first frame.
+      // Start from the exact first frame. The real editor canvas re-renders
+      // in response to `onAnimationFrame`, which is what we capture below.
       onAnimationFrame(0);
-      player?.seekTo(0);
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
       );
 
       for (let frame = 0; frame < durationInFrames; frame++) {
         onAnimationFrame(frame);
-        player?.seekTo(frame);
 
         // Wait until React has committed the frame and the browser has painted it.
         await new Promise<void>((resolve) =>
@@ -467,36 +457,10 @@ function MotionPanel({
 
   return (
     <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-dim">
-        Preview
-      </p>
-
-      <div className="overflow-hidden rounded-xl border border-line bg-black">
-        <Player
-          ref={playerRef}
-          component={MockupComposition}
-          inputProps={{
-            presetId: activePreset.id,
-            padding,
-            ...stageProps,
-          }}
-          durationInFrames={durationInFrames}
-          fps={FPS}
-          compositionWidth={CANVAS_REFERENCE_WIDTH}
-          compositionHeight={CANVAS_REFERENCE_HEIGHT}
-          style={{
-            width: "100%",
-          }}
-          controls
-          loop
-          autoPlay
-        />
-      </div>
-
       <button
         onClick={handleExport}
-        disabled={exporting}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-amber py-2.5 text-xs font-semibold text-void transition hover:opacity-90 disabled:opacity-60"
+        disabled={exporting || clips.length === 0}
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber py-2.5 text-xs font-semibold text-void transition hover:opacity-90 disabled:opacity-60"
       >
         {exporting ? (
           <>
@@ -512,7 +476,7 @@ function MotionPanel({
         )}
       </button>
 
-      <div className="mt-7 border-t border-line-soft pt-5">
+      <div className="mt-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-dim">
           Motion presets
         </p>
@@ -540,12 +504,9 @@ function MotionPanel({
                   {g.presets.map((p) => (
                     <button
                       key={p.id}
-                      onClick={() => onApplyPreset(p)}
-                      className={`group relative overflow-hidden rounded-lg border text-left transition ${
-                        activePreset.id === p.id
-                          ? "border-amber"
-                          : "border-line hover:border-amber/50"
-                      } bg-panel-2`}
+                      onClick={() => onAddClip(p)}
+                      title="Add to timeline"
+                      className="group relative overflow-hidden rounded-lg border border-line text-left transition border-line hover:border-amber/50 bg-panel-2"
                     >
                       <div className="relative">
                         <MiniStage
@@ -578,6 +539,8 @@ function MotionPanel({
 }
 
 export default function RightPanel({
+  mode,
+  onModeChange,
   zoom,
   onZoom,
   tiltX,
@@ -596,11 +559,14 @@ export default function RightPanel({
   codeSnippet,
   device,
   canvasRef,
-  activeAnimationPreset,
-  onAnimationPreset,
+  animationClips,
+  onAddAnimationClip,
+  totalFrames,
   onAnimationFrame,
   onVideoExporting,
 }: {
+  mode: "3d" | "flat";
+  onModeChange: (mode: "3d" | "flat") => void;
   zoom: number;
   onZoom: (n: number) => void;
   tiltX: number;
@@ -623,13 +589,15 @@ export default function RightPanel({
    * Ref of the MAIN CENTER CANVAS.
    */
   canvasRef: React.RefObject<HTMLDivElement | null>;
-  activeAnimationPreset: AnimationPreset;
-  onAnimationPreset: (preset: AnimationPreset) => void;
+  /** The clips currently placed on the timeline, in order. */
+  animationClips: AnimationClip[];
+  /** Appends a new clip built from this preset to the end of the timeline. */
+  onAddAnimationClip: (preset: AnimationPreset) => void;
+  /** Combined length (frames) of the whole clip sequence. */
+  totalFrames: number;
   onAnimationFrame: (frame: number) => void;
   onVideoExporting: (value: boolean) => void;
 }) {
-  const [mode, setMode] = useState<"3d" | "flat">("3d");
-
   const [openGroup, setOpenGroup] = useState<string>("Popular");
 
   const stageProps = {
@@ -649,7 +617,7 @@ export default function RightPanel({
     <aside className="flex w-72 shrink-0 flex-col border-l border-line-soft bg-panel">
       <div className="flex items-center gap-1 border-b border-line-soft p-3">
         <button
-          onClick={() => setMode("3d")}
+          onClick={() => onModeChange("3d")}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium transition ${
             mode === "3d"
               ? "bg-panel-2 text-ink"
@@ -661,7 +629,7 @@ export default function RightPanel({
         </button>
 
         <button
-          onClick={() => setMode("flat")}
+          onClick={() => onModeChange("flat")}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium transition ${
             mode === "flat"
               ? "bg-panel-2 text-ink"
@@ -768,11 +736,12 @@ export default function RightPanel({
 
         {mode === "flat" && (
           <MotionPanel
-            activePreset={activeAnimationPreset}
-            onApplyPreset={onAnimationPreset}
+            clips={animationClips}
+            onAddClip={onAddAnimationClip}
             stageProps={stageProps}
             padding={padding}
             canvasRef={canvasRef}
+            totalFrames={totalFrames}
             onAnimationFrame={onAnimationFrame}
             onVideoExporting={onVideoExporting}
           />

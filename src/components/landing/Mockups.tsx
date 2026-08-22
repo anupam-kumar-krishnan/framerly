@@ -126,7 +126,7 @@ function BrowserMockup() {
         <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
         <span className="ml-2 flex-1 rounded-md bg-neutral-950/70 py-0.5 text-center text-[10px] text-neutral-400 ring-1 ring-white/5">
-          northwind.app
+          dashboard.app
         </span>
       </div>
       <DashboardContent />

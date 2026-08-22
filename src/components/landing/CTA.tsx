@@ -33,10 +33,10 @@ export default function CTA() {
           href="/app"
           className="group mt-9 inline-flex items-center gap-2 rounded-full bg-amber px-7 py-3.5 font-medium text-amber-ink transition hover:bg-amber-soft"
         >
-          Open the studio
+          Open the Studio
           <ArrowRight
-            size={16}
-            className="transition group-hover:translate-x-0.5"
+            size={20}
+            className="transition group-hover:translate-x-2"
           />
         </Link>
       </div>

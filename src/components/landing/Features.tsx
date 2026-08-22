@@ -1,5 +1,6 @@
 "use client";
 
+import { forwardRef, useCallback, useRef } from "react";
 import { motion } from "motion/react";
 import type { Variants } from "motion/react";
 import {
@@ -32,10 +33,14 @@ const fadeUp: Variants = {
 const NOISE_URL =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
-const FRAME_CHIPS = [
-  { label: "macOS", rotate: -7, x: -18 },
-  { label: "Windows", rotate: 0, x: 0 },
-  { label: "Arc", rotate: 7, x: 18 },
+// Device-frame chips shown in the "Frames" tile's horizontal marquee.
+// Each has its own width/height so the row reads like a real mix of device
+// shapes (a phone is narrower + taller than a laptop, etc).
+const FRAME_TYPES = [
+  { key: "terminal", label: "Terminal", width: "w-24", height: "h-16" },
+  { key: "macbook", label: "MacBook", width: "w-28", height: "h-16" },
+  { key: "glass", label: "Glass", width: "w-24", height: "h-16" },
+  { key: "iphone", label: "iPhone", width: "w-12", height: "h-20" },
 ];
 
 const STYLE_SWATCHES = ["Noise", "Solid", "Blur", "Grain", "Mesh"];
@@ -58,7 +63,64 @@ const BG_CANVAS_FILLS = [
   "transparent",
 ];
 
+// How far (in px, in page space) the cursor's influence reaches. Any tile
+// edge farther than this from the cursor gets zero glow; closer edges fade
+// in smoothly, so a single cursor position can light up the touching
+// corners/edges of several adjacent tiles at once.
+const GLOW_MAX_DISTANCE = 340;
+// Radius of the radial-gradient itself (independent of the falloff above).
+const GLOW_RADIUS = 300;
+
 export default function BentoFeatures() {
+  const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const registerTile = useCallback(
+    (index: number) => (el: HTMLDivElement | null) => {
+      tileRefs.current[index] = el;
+    },
+    [],
+  );
+
+  // Single mousemove handler on the whole grid. For every tile we compute
+  // (a) the cursor position in that tile's own local coordinate space (used
+  // to position the radial-gradient — this can legally be negative or
+  // beyond the tile's own width/height) and (b) an intensity that falls off
+  // with the shortest distance from the cursor to the tile's rectangle.
+  // Style is written directly via refs (no React state) so this stays smooth
+  // at 60fps without re-rendering the tree on every pixel of movement.
+  const handleGridMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const px = e.clientX;
+      const py = e.clientY;
+
+      tileRefs.current.forEach((el) => {
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+
+        const dx = Math.max(rect.left - px, 0, px - rect.right);
+        const dy = Math.max(rect.top - py, 0, py - rect.bottom);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const intensity = Math.max(0, 1 - distance / GLOW_MAX_DISTANCE);
+
+        const localX = px - rect.left;
+        const localY = py - rect.top;
+
+        el.style.setProperty("--glow-x", `${localX}px`);
+        el.style.setProperty("--glow-y", `${localY}px`);
+        el.style.setProperty("--glow-intensity", intensity.toFixed(3));
+      });
+    },
+    [],
+  );
+
+  const handleGridMouseLeave = useCallback(() => {
+    tileRefs.current.forEach((el) => {
+      if (!el) return;
+      el.style.setProperty("--glow-intensity", "0");
+    });
+  }, []);
+
   return (
     <section id="features" className="bg-black px-6 py-28">
       <div className="mx-auto max-w-6xl">
@@ -83,8 +145,13 @@ export default function BentoFeatures() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:grid-flow-row-dense">
+        <div
+          onMouseMove={handleGridMouseMove}
+          onMouseLeave={handleGridMouseLeave}
+          className="grid grid-cols-1 gap-4 md:grid-cols-6 md:grid-flow-row-dense"
+        >
           <Tile
+            ref={registerTile(0)}
             eyebrow="Frames"
             title="Device Frames"
             desc="Browser, MacBook, iPhone, Glass."
@@ -94,6 +161,7 @@ export default function BentoFeatures() {
           </Tile>
 
           <Tile
+            ref={registerTile(1)}
             eyebrow="Depth"
             title="3D Transforms"
             desc="Tilt and zoom presets for perspective that feels real."
@@ -103,6 +171,7 @@ export default function BentoFeatures() {
           </Tile>
 
           <Tile
+            ref={registerTile(2)}
             eyebrow="Style"
             title="Beautiful Backdrops"
             desc="Gradient, solid, or image backgrounds tuned to sit behind the shot, not compete with it."
@@ -112,6 +181,7 @@ export default function BentoFeatures() {
           </Tile>
 
           <Tile
+            ref={registerTile(3)}
             eyebrow="Layout"
             title="Shadow & Radius"
             desc="Independent controls for shadow depth, corner radius, and canvas padding."
@@ -121,6 +191,7 @@ export default function BentoFeatures() {
           </Tile>
 
           <Tile
+            ref={registerTile(4)}
             eyebrow="Export"
             title="High-Res Export"
             desc="PNG, sized for a tweet, a deck slide, or a 4K hero banner."
@@ -130,6 +201,7 @@ export default function BentoFeatures() {
           </Tile>
 
           <Tile
+            ref={registerTile(5)}
             eyebrow="Capture"
             title="Capture by Link"
             desc="Paste a URL, choose light or dark, done."
@@ -139,6 +211,7 @@ export default function BentoFeatures() {
           </Tile>
 
           <Tile
+            ref={registerTile(6)}
             eyebrow="Canvas"
             title="Custom Backgrounds"
             desc="Upload your own image, drop in a solid color or gradient, lift a gradient straight from your photo, or go fully transparent."
@@ -152,57 +225,41 @@ export default function BentoFeatures() {
   );
 }
 
-function Tile({
-  eyebrow,
-  title,
-  desc,
-  className = "",
-  children,
-}: {
+type TileProps = {
   eyebrow: string;
   title: string;
   desc: string;
   className?: string;
   children: React.ReactNode;
-}) {
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    e.currentTarget.style.setProperty("--glow-x", `${x}%`);
-    e.currentTarget.style.setProperty("--glow-y", `${y}%`);
-  };
+};
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.setProperty("--glow-intensity", "1");
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.setProperty("--glow-intensity", "0");
-  };
-
+// forwardRef so the parent grid can read this tile's DOM node directly and
+// write --glow-x / --glow-y / --glow-intensity onto it from the shared
+// mousemove handler above (see BentoFeatures).
+const Tile = forwardRef<HTMLDivElement, TileProps>(function Tile(
+  { eyebrow, title, desc, className = "", children },
+  ref,
+) {
   return (
     <motion.div
+      ref={ref}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.3 }}
       variants={fadeUp}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       style={
         {
           "--glow-x": "50%",
           "--glow-y": "50%",
           "--glow-intensity": 0,
-          "--glow-radius": "260px",
+          "--glow-radius": `${GLOW_RADIUS}px`,
         } as React.CSSProperties
       }
       className={`group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-800/80 bg-neutral-950 p-6 ${className}`}
     >
-      {/* soft interior wash — fades with --glow-intensity, tracks the cursor */}
+      {/* soft interior wash — position + intensity driven by the shared cursor tracker, so this brightens as the cursor approaches this tile from anywhere on the grid, not just while directly over it */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-500 ease-out"
+        className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300 ease-out"
         style={{
           opacity: "var(--glow-intensity)",
           background:
@@ -210,12 +267,12 @@ function Tile({
         }}
       />
 
-      {/* masked ring — only the border stroke nearest the cursor lights up */}
+      {/* masked ring — the border stroke nearest the cursor lights up, including on neighboring tiles whose corner/edge sits close to the cursor */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-500 ease-out"
+        className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300 ease-out"
         style={{
           opacity: "var(--glow-intensity)",
-          padding: 1,
+          padding: 6,
           background:
             "radial-gradient(var(--glow-radius) circle at var(--glow-x) var(--glow-y), rgba(251,191,36,0.95), transparent 70%)",
           WebkitMask:
@@ -241,46 +298,115 @@ function Tile({
       </p>
     </motion.div>
   );
-}
+});
 
 function FramesIllustration() {
+  const loopFrames = [...FRAME_TYPES, ...FRAME_TYPES];
+
   return (
-    <div className="relative flex h-28 w-full items-center justify-center">
-      {FRAME_CHIPS.map(({ label, rotate, x }, i) => (
-        <motion.div
-          key={label}
-          initial={{ rotate, x }}
-          animate={{
-            y: [0, i === 1 ? -6 : 0, 0],
-            boxShadow: [
-              "0 12px 24px -8px rgba(0,0,0,0.6)",
-              i === 1
-                ? "0 16px 32px -6px rgba(251,191,36,0.25)"
-                : "0 12px 24px -8px rgba(0,0,0,0.6)",
-              "0 12px 24px -8px rgba(0,0,0,0.6)",
-            ],
-          }}
-          transition={{
-            duration: 3.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.5,
-          }}
-          style={{ rotate, x, zIndex: i === 1 ? 10 : 5 - i }}
-          className="absolute h-16 w-24 overflow-hidden rounded-lg border border-neutral-800 bg-gradient-to-b from-neutral-800 to-neutral-900"
-        >
-          <div className="flex h-full flex-col justify-between p-2">
-            <div className="flex gap-1">
-              <span className="h-1 w-1 rounded-full bg-neutral-600" />
-              <span className="h-1 w-1 rounded-full bg-neutral-600" />
-              <span className="h-1 w-1 rounded-full bg-neutral-600" />
+    <div
+      className="relative w-full overflow-hidden"
+      style={{
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+        maskImage:
+          "linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
+      }}
+    >
+      <motion.div
+        className="flex items-end gap-3"
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+      >
+        {loopFrames.map((frame, i) => (
+          <div
+            key={`${frame.key}-${i}`}
+            className={`relative ${frame.width} ${frame.height} shrink-0 overflow-hidden rounded-xl border border-neutral-800`}
+          >
+            <FrameTexture kind={frame.key} />
+            <div className="absolute bottom-1 left-1 rounded-sm bg-black/60 px-1 py-0.5">
+              <span className="text-[7px] font-medium uppercase tracking-wide text-neutral-200">
+                {frame.label}
+              </span>
             </div>
-            <span className="self-start rounded-sm bg-black/40 px-1 py-0.5 text-[7px] font-medium uppercase tracking-wide text-neutral-400">
-              {label}
-            </span>
           </div>
-        </motion.div>
-      ))}
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function FrameTexture({ kind }: { kind: string }) {
+  if (kind === "terminal") {
+    return (
+      <div className="flex h-full w-full flex-col justify-between bg-gradient-to-b from-neutral-900 to-black p-2">
+        <div className="flex gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500/70" />
+          <span className="h-1.5 w-1.5 rounded-full bg-yellow-500/70" />
+          <span className="h-1.5 w-1.5 rounded-full bg-green-500/70" />
+        </div>
+        <div className="space-y-1">
+          <div className="h-1 w-3/4 rounded-full bg-neutral-700" />
+          <div className="h-1 w-1/2 rounded-full bg-amber-400/50" />
+          <div className="h-1 w-2/3 rounded-full bg-neutral-700" />
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "macbook") {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-end">
+        {/* screen — intentionally narrower than the deck below it, like a real laptop viewed from the front */}
+        <div className="relative flex w-[86%] flex-1 flex-col overflow-hidden rounded-t-md border border-neutral-700 bg-gradient-to-b from-neutral-800 to-neutral-950">
+          {/* camera notch — a touch lighter than pure black so it reads against the dark bezel */}
+          <div className="absolute left-1/2 top-0 h-1 w-3 -translate-x-1/2 rounded-b-sm bg-neutral-600" />
+
+          <div className="flex items-center gap-1 px-1.5 pt-1.5">
+            <span className="h-1 w-1 rounded-full bg-neutral-600" />
+            <span className="h-1 w-1 rounded-full bg-neutral-600" />
+            <span className="h-1 w-1 rounded-full bg-neutral-600" />
+          </div>
+
+          <div className="flex flex-1 items-center justify-center">
+            <div className="h-5 w-10 rounded-sm bg-amber-400/35" />
+          </div>
+        </div>
+
+        {/* hinge */}
+        <div className="h-[2px] w-[90%] bg-neutral-500" />
+
+        {/* keyboard deck — wider than the screen, aluminum-grey, with a trackpad notch cut into the front edge */}
+        <div className="relative h-[20%] w-full rounded-b-[4px] bg-gradient-to-b from-neutral-300 to-neutral-500">
+          <div className="absolute left-1/2 top-0 h-[3px] w-6 -translate-x-1/2 rounded-b-full bg-neutral-800" />
+        </div>
+      </div>
+    );
+  }
+
+  if (kind === "glass") {
+    return (
+      <div className="relative h-full w-full overflow-hidden bg-white/10 backdrop-blur-md">
+        <div
+          className="absolute -inset-4 opacity-70 blur-xl"
+          style={{
+            background:
+              "linear-gradient(120deg, rgba(255,255,255,0.5), transparent 60%)",
+          }}
+        />
+        <div className="relative flex h-full w-full flex-col justify-center gap-1 px-2">
+          <div className="h-1 w-3/4 rounded-full bg-white/50" />
+          <div className="h-1 w-1/2 rounded-full bg-white/30" />
+        </div>
+      </div>
+    );
+  }
+
+  // iphone
+  return (
+    <div className="relative flex h-full w-full items-start justify-center bg-black pt-1.5">
+      <span className="absolute top-1 h-1 w-4 rounded-full bg-neutral-800" />
+      <div className="mt-3 h-[85%] w-[80%] rounded-md bg-gradient-to-b from-amber-400/30 to-neutral-900" />
     </div>
   );
 }
