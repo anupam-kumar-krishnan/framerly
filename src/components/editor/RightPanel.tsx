@@ -9,6 +9,8 @@ import {
   Download,
   Loader2,
   Plus,
+  X,
+  Check,
 } from "lucide-react";
 import { toCanvas } from "html-to-image";
 import { FrameStyle } from "@/components/shared/BrowserFrame";
@@ -317,6 +319,283 @@ function MiniStage({
   );
 }
 
+/**
+ * Amber dot-matrix loader — 19 dots hex-packed into rows of 3-4-5-4-3
+ * (matching the reference clip), each an amber radial-gradient "bead" that
+ * twinkles independently: opacity/scale pulse from dim to bright and back
+ * on its own staggered, deterministic delay, so brightness appears to
+ * sparkle/scatter across the grid rather than sweep in one direction.
+ */
+function DotMatrixLoader() {
+  const rowCounts = [3, 4, 5, 4, 3];
+  const dotSize = 9;
+  const gapX = 11;
+  const gapY = 9.5;
+  const total = rowCounts.reduce((a, b) => a + b, 0);
+
+  const dots: { x: number; y: number; delay: number; dur: number }[] = [];
+  let idx = 0;
+
+  rowCounts.forEach((count, r) => {
+    const rowWidth = (count - 1) * gapX;
+
+    for (let c = 0; c < count; c++) {
+      const x = c * gapX - rowWidth / 2;
+      const y = (r - (rowCounts.length - 1) / 2) * gapY;
+
+      // idx * 7 mod total is a coprime step through 0..total-1, giving a
+      // fixed but scrambled (non-sequential) spread of start delays so the
+      // twinkle reads as organic sparkle rather than a clean sweep.
+      const delay = ((idx * 7) % total) / total;
+
+      dots.push({
+        x,
+        y,
+        delay: delay * 1.8,
+        dur: 1.7 + ((idx * 3) % 3) * 0.15,
+      });
+
+      idx++;
+    }
+  });
+
+  return (
+    <div className="relative mx-auto h-16 w-16">
+      <style>{`
+        @keyframes dot-twinkle {
+          0%, 100% { opacity: 0.25; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+
+      <div className="absolute left-1/2 top-1/2">
+        {dots.map((d, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: dotSize,
+              height: dotSize,
+              left: d.x - dotSize / 2,
+              top: d.y - dotSize / 2,
+              background:
+                "radial-gradient(circle at 35% 30%, #fde68a, #fbbf24 55%, #b45309 100%)",
+              animation: `dot-twinkle ${d.dur}s ease-in-out ${d.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One-shot confetti burst. Particles are generated once (ref) and animate
+ * outward with randomized angle/distance/rotation via CSS custom
+ * properties, then the parent unmounts this after ~1s.
+ */
+function ConfettiBurst() {
+  const pieces = useRef(
+    Array.from({ length: 26 }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / 26 + Math.random() * 0.5;
+      const distance = 55 + Math.random() * 55;
+      const colors = ["#f5a623", "#fbbf24", "#f97316", "#facc15", "#ffffff"];
+
+      return {
+        id: i,
+        tx: Math.cos(angle) * distance,
+        ty: Math.sin(angle) * distance,
+        tr: Math.round(Math.random() * 360),
+        color: colors[i % colors.length],
+        delay: Math.random() * 0.08,
+        size: 5 + Math.random() * 4,
+        round: i % 3 === 0,
+      };
+    }),
+  ).current;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <style>{`
+        @keyframes confetti-burst {
+          0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) rotate(var(--tr)) scale(0.4); opacity: 0; }
+        }
+      `}</style>
+
+      {pieces.map((p) => (
+        <span
+          key={p.id}
+          style={
+            {
+              position: "absolute",
+              // Absolutely-positioned children of a flex container don't
+              // reliably land at the centered "static position" across
+              // browsers — pin each particle to the exact center explicitly
+              // instead of depending on the parent's flex centering.
+              left: `calc(50% - ${p.size / 2}px)`,
+              top: `calc(50% - ${p.size / 2}px)`,
+              width: p.size,
+              height: p.size,
+              backgroundColor: p.color,
+              borderRadius: p.round ? "9999px" : "2px",
+              "--tx": `${p.tx}px`,
+              "--ty": `${p.ty}px`,
+              "--tr": `${p.tr}deg`,
+              animation: `confetti-burst 0.9s cubic-bezier(0.2,0.7,0.3,1) ${p.delay}s forwards`,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Full-screen modal shown while a video export is in progress. Mirrors the
+ * "Exporting Video" flow from Screenshot Studio: title, subtitle, an
+ * animated capture icon, a live percentage, a progress bar, a status line,
+ * a format badge, and a cancel action. At 100% the icon morphs into a
+ * checkmark and a confetti burst fires once.
+ */
+function ExportModal({
+  progress,
+  stage,
+  onCancel,
+}: {
+  progress: number;
+  stage: "capturing" | "finalizing";
+  onCancel: () => void;
+}) {
+  const done = progress >= 100;
+  const [celebrate, setCelebrate] = useState(false);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    if (done && !firedRef.current) {
+      firedRef.current = true;
+      setCelebrate(true);
+      const t = setTimeout(() => setCelebrate(false), 1000);
+      return () => clearTimeout(t);
+    }
+
+    if (!done) {
+      firedRef.current = false;
+    }
+  }, [done]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/70 backdrop-blur-sm">
+      {/* Local keyframes — scoped inline so no tailwind.config changes are
+          required. */}
+      <style>{`
+        @keyframes export-modal-in {
+          from { opacity: 0; transform: translateY(6px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes export-pop {
+          0% { transform: scale(0.4); opacity: 0; }
+          65% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes export-ring-pulse {
+          0% { transform: scale(0.9); opacity: 0.6; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
+      `}</style>
+
+      <div
+        className="w-full max-w-sm rounded-2xl border border-line bg-panel p-6 shadow-2xl"
+        style={{ animation: "export-modal-in 0.18s ease-out" }}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-ink">
+              Exporting Video
+            </h3>
+            <p className="mt-1 text-xs text-ink-dim">
+              Sit back while we render your creation
+            </p>
+          </div>
+
+          <button
+            onClick={onCancel}
+            aria-label="Close"
+            className="rounded-md p-1 text-ink-faint transition hover:text-ink"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="relative mx-auto my-8 h-16 w-16">
+          {done && (
+            <>
+              <div className="absolute inset-0 rounded-xl border-2 border-amber/30" />
+              <div
+                className="absolute inset-0 rounded-xl border-2 border-amber"
+                style={{ animation: "export-ring-pulse 1s ease-out infinite" }}
+              />
+              <div
+                className="absolute inset-0 rounded-xl border-2 border-amber"
+                style={{
+                  animation: "export-ring-pulse 1s ease-out 0.5s infinite",
+                }}
+              />
+            </>
+          )}
+
+          <div className="absolute inset-0 flex items-center justify-center">
+            {done ? (
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber"
+                style={{ animation: "export-pop 0.4s ease-out" }}
+              >
+                <Check size={18} className="text-void" strokeWidth={3} />
+              </div>
+            ) : (
+              <DotMatrixLoader />
+            )}
+          </div>
+
+          {celebrate && <ConfettiBurst />}
+        </div>
+
+        <p className="text-center font-mono text-3xl font-bold tabular-nums text-ink">
+          {progress}%
+        </p>
+
+        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-panel-2">
+          <div
+            className="h-full rounded-full bg-amber transition-[width] duration-150 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <p className="mt-4 text-center text-xs text-ink-dim">
+          {done
+            ? "Done!"
+            : stage === "capturing"
+              ? "Capturing frames…"
+              : "Finalizing video…"}
+        </p>
+
+        <div className="mt-4 flex justify-center">
+          <span className="inline-block rounded-full border border-line bg-panel-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-ink-faint">
+            Exporting as WebM
+          </span>
+        </div>
+
+        <button
+          onClick={onCancel}
+          className="mt-6 w-full rounded-lg border border-line py-2.5 text-xs font-semibold text-ink-dim transition hover:border-red-500/40 hover:text-red-400"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function MotionPanel({
   clips,
   onAddClip,
@@ -343,13 +622,23 @@ function MotionPanel({
   const [openGroup, setOpenGroup] = useState<string>("Reveal");
   const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState<"capturing" | "finalizing">("capturing");
+  const cancelledRef = useRef(false);
+
+  const handleCancelExport = () => {
+    // Flag checked inside the per-frame loop below; the export routine
+    // handles its own teardown once it notices the flag is set.
+    cancelledRef.current = true;
+  };
 
   const handleExport = async () => {
     const captureEl = canvasRef.current;
 
     if (!captureEl) return;
 
+    cancelledRef.current = false;
     setExporting(true);
+    setStage("capturing");
     setProgress(0);
     onVideoExporting(true);
 
@@ -419,8 +708,14 @@ function MotionPanel({
 
       const frameDurationMs = 1000 / FPS;
       const exportStart = performance.now();
+      let wasCancelled = false;
 
       for (let frame = 0; frame < durationInFrames; frame++) {
+        if (cancelledRef.current) {
+          wasCancelled = true;
+          break;
+        }
+
         onAnimationFrame(frame);
 
         await new Promise<void>((resolve) =>
@@ -458,21 +753,34 @@ function MotionPanel({
         setProgress(Math.round(((frame + 1) / durationInFrames) * 100));
       }
 
-      // Give the auto-sampling stream one more tick to pick up the final
-      // frame before we stop recording.
-      await new Promise((resolve) => setTimeout(resolve, frameDurationMs * 2));
+      if (!wasCancelled) {
+        setStage("finalizing");
+
+        // Give the auto-sampling stream one more tick to pick up the final
+        // frame before we stop recording.
+        await new Promise((resolve) =>
+          setTimeout(resolve, frameDurationMs * 2),
+        );
+      }
 
       recorder.stop();
       await recordingStopped;
 
-      const blob = new Blob(chunks, { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "framerly-export.webm";
-      a.click();
+      if (!wasCancelled) {
+        const blob = new Blob(chunks, { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "framerly-export.webm";
+        a.click();
 
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        // Hold the modal at 100% briefly so the success checkmark and
+        // confetti burst are actually visible before it closes — without
+        // this the modal was unmounting mid-animation.
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+      }
     } catch (err) {
       console.error("Export failed:", err);
     } finally {
@@ -480,6 +788,8 @@ function MotionPanel({
       onVideoExporting(false);
       setExporting(false);
       setProgress(0);
+      setStage("capturing");
+      cancelledRef.current = false;
     }
   };
 
@@ -494,7 +804,6 @@ function MotionPanel({
           <>
             <Loader2 size={14} className="animate-spin" />
             Exporting…
-            {progress > 0 ? ` ${progress}%` : ""}
           </>
         ) : (
           <>
@@ -503,6 +812,14 @@ function MotionPanel({
           </>
         )}
       </button>
+
+      {exporting && (
+        <ExportModal
+          progress={progress}
+          stage={stage}
+          onCancel={handleCancelExport}
+        />
+      )}
 
       <div className="mt-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-dim">
