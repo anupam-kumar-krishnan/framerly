@@ -355,8 +355,18 @@ function MotionPanel({
 
     try {
       const durationInFrames = Math.max(1, totalFrames);
-      const outputWidth = CANVAS_REFERENCE_WIDTH * 2;
-      const outputHeight = CANVAS_REFERENCE_HEIGHT * 2;
+
+      // Measure the actual rendered size of the canvas element instead of
+      // assuming CANVAS_REFERENCE_WIDTH/HEIGHT. Forcing toCanvas to a fixed
+      // width/height that didn't match the element's real aspect ratio was
+      // what caused the black letterboxed border on export — html-to-image
+      // doesn't rescale content to fit a mismatched target size, it just
+      // leaves the extra space blank.
+      const rect = captureEl.getBoundingClientRect();
+      const pixelRatio = 2;
+      const outputWidth = Math.round(rect.width * pixelRatio);
+      const outputHeight = Math.round(rect.height * pixelRatio);
+
       const recordCanvas = document.createElement("canvas");
 
       recordCanvas.width = outputWidth;
@@ -368,7 +378,12 @@ function MotionPanel({
         throw new Error("Could not get 2D context for export canvas");
       }
 
-      const stream = recordCanvas.captureStream(0);
+      // Auto-sample at the target FPS instead of manually calling
+      // requestFrame() after every (variably slow) toCanvas() capture —
+      // that manual pacing was what made the exported video choppy, since
+      // each recorded frame's on-screen duration was however long that
+      // particular capture happened to take, not a consistent frame time.
+      const stream = recordCanvas.captureStream(FPS);
       const track = stream.getVideoTracks()[0] as
         | CanvasCaptureMediaStreamTrack
         | undefined;
@@ -402,6 +417,9 @@ function MotionPanel({
         requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
       );
 
+      const frameDurationMs = 1000 / FPS;
+      const exportStart = performance.now();
+
       for (let frame = 0; frame < durationInFrames; frame++) {
         onAnimationFrame(frame);
 
@@ -410,9 +428,9 @@ function MotionPanel({
         );
 
         const frameCanvas = await toCanvas(captureEl, {
-          width: CANVAS_REFERENCE_WIDTH,
-          height: CANVAS_REFERENCE_HEIGHT,
-          pixelRatio: 2,
+          width: rect.width,
+          height: rect.height,
+          pixelRatio,
           cacheBust: true,
           skipFonts: false,
           filter: (node) => {
@@ -426,9 +444,23 @@ function MotionPanel({
         ctx.clearRect(0, 0, outputWidth, outputHeight);
         ctx.drawImage(frameCanvas, 0, 0, outputWidth, outputHeight);
 
-        track.requestFrame();
+        // Hold each canvas update until its proper slot on the FPS grid so
+        // captureStream(FPS) samples evenly-spaced, correctly-timed frames
+        // rather than drifting with however long each capture took.
+        const targetElapsed = (frame + 1) * frameDurationMs;
+        const actualElapsed = performance.now() - exportStart;
+        if (actualElapsed < targetElapsed) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, targetElapsed - actualElapsed),
+          );
+        }
+
         setProgress(Math.round(((frame + 1) / durationInFrames) * 100));
       }
+
+      // Give the auto-sampling stream one more tick to pick up the final
+      // frame before we stop recording.
+      await new Promise((resolve) => setTimeout(resolve, frameDurationMs * 2));
 
       recorder.stop();
       await recordingStopped;
