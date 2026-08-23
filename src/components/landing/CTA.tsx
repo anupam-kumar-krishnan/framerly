@@ -25,7 +25,7 @@ export default function CTA() {
           Your next <span className="text-amber-400">screenshot</span> deserves
           <br /> better <span className="text-amber-400">lighting.</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-ink-dim">
+        <p className="mx-auto mt-4 max-w-xl text-balance text-base text-neutral-400 sm:text-lg">
           Open the studio, drop in an image, and see it framed in under ten
           seconds. No sign-up required to try it out.
         </p>

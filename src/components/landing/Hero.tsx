@@ -61,7 +61,6 @@ export default function Hero() {
           transition={{ duration: 0.6 }}
           className="relative mx-auto mb-6 inline-flex rounded-full p-[1px] overflow-hidden"
         >
-          {/* running border — oversized square that rotates, clipped by the static pill above */}
           <motion.span
             aria-hidden
             className="absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2"
@@ -98,10 +97,10 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.25 }}
-          className="mx-auto mt-5 max-w-lg text-[15.5px] leading-relaxed text-text-dim"
+          className="mx-auto mt-4 max-w-xl text-balance text-base text-neutral-400 sm:text-lg"
         >
           Drop in any screenshot, pick a frame, and export in seconds. Same
-          canvas you see below — no separate preview, no surprises.
+          canvas you see below. No separate preview, no surprises.
         </motion.p>
 
         <motion.div
@@ -148,7 +147,6 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* product screenshot, front and center */}
       <div
         ref={ref}
         onMouseMove={handleMove}
@@ -164,7 +162,6 @@ export default function Hero() {
           style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
           className="overflow-hidden rounded-2xl border border-[#ffffff] bg-[#0d0c10] shadow-[0_50px_120px_-30px_rgba(0,0,0,0.8)]"
         >
-          {/* topbar */}
           <div className="flex items-center justify-between border-b border-border bg-[#131116] px-4 py-3">
             <div className="flex items-center gap-3 text-text-dim">
               <span className="flex h-5 w-5 items-center justify-center rounded-md bg-grad-accent" />
@@ -190,7 +187,6 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* body */}
           <div className="grid grid-cols-1 sm:grid-cols-[170px_1fr_190px]">
             <div className="hidden border-r border-border p-4 sm:block">
               <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-text-dimmer">
@@ -240,7 +236,6 @@ export default function Hero() {
                 </span>
               </div>
 
-              {/* floating annotation chips */}
               <motion.div
                 initial={{ opacity: 0, x: -14 }}
                 animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}

@@ -338,7 +338,6 @@ function Playhead({
         className="mt-0.5 w-px flex-1 bg-white/90"
       />
 
-      {/* Wider invisible strip so the thin line is easy to grab. */}
       <div
         onPointerDown={handleDragStart}
         className="absolute inset-y-0 -left-2 -right-2 cursor-ew-resize"

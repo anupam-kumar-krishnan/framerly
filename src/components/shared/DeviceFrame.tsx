@@ -55,8 +55,6 @@ export default function DeviceFrame({
           padding: "1.4%",
         }}
       >
-        {/* Metal body — separate layer so its rounded corners/shadow don't
-            also clip the buttons (which sit slightly outside this box). */}
         <div
           className="absolute inset-0"
           style={{
@@ -109,7 +107,6 @@ export default function DeviceFrame({
             clipPath: `inset(0 round ${bezelRadius})`,
           }}
         >
-          {/* Screen */}
           <div
             className="relative h-full w-full overflow-hidden bg-black"
             style={{
@@ -144,7 +141,6 @@ export default function DeviceFrame({
 
             {children}
 
-            {/* Home indicator */}
             <div
               className="absolute rounded-full bg-white/60"
               style={{
@@ -177,14 +173,13 @@ export default function DeviceFrame({
             boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04)",
           }}
         >
-          {/* Camera notch */}
           <div
             className="absolute left-1/2 top-0 z-10 h-[7px] w-12 -translate-x-1/2 rounded-b-[3px]"
             style={{ background: "#000" }}
           />
           <div className="h-full w-full overflow-hidden">{children}</div>
         </div>
-        {/* Base / hinge */}
+
         <div
           className="mx-auto shrink-0 rounded-b-[10px] bg-gradient-to-b from-[#d8d8dd] to-[#a8a8ae]"
           style={{ height: "6%", width: "104%", marginLeft: "-2%" }}
@@ -218,7 +213,6 @@ export default function DeviceFrame({
             "inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 12px rgba(255,255,255,0.08), inset 0 0 0 1px rgba(255,255,255,0.05), 0 12px 40px rgba(0,0,0,0.35)",
         }}
       >
-        {/* diagonal glossy sheen, like light raking across the glass */}
         <div
           className="pointer-events-none absolute -inset-1"
           style={{
@@ -228,7 +222,7 @@ export default function DeviceFrame({
             mixBlendMode: "screen",
           }}
         />
-        {/* fine grain so the blur reads as frosted glass, not a flat tint */}
+
         <div
           className="pointer-events-none absolute -inset-1 opacity-[0.06]"
           style={{

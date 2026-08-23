@@ -479,8 +479,6 @@ function ExportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-void/70 backdrop-blur-sm">
-      {/* Local keyframes — scoped inline so no tailwind.config changes are
-          required. */}
       <style>{`
         @keyframes export-modal-in {
           from { opacity: 0; transform: translateY(6px) scale(0.98); }
@@ -839,7 +837,6 @@ function MotionPanel({
                           {(p.durationMs / 1000).toFixed(1)}s
                         </span>
 
-                        {/* Hover overlay: centered glassmorphism square with Plus icon */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                           <div className="flex h-9 w-9 items-center justify-center rounded-md border border-white bg-white/10 backdrop-blur-md">
                             <Plus
@@ -920,22 +917,13 @@ export default function RightPanel({
   totalFrames: number;
   onAnimationFrame: (frame: number) => void;
   onVideoExporting: (value: boolean) => void;
-  /**
-   * Whether the Animate timeline is currently open (mirrors the same state
-   * TopBar's `animateOpen` prop reflects). When this flips true we jump the
-   * tab to "Motion"; when it flips back to false we jump back to "3D". Pass
-   * the exact same state variable you pass to `TopBar`'s `animateOpen` prop.
-   */
+
   animateOpen: boolean;
 }) {
   const [openGroup, setOpenGroup] = useState<string>("Popular");
 
-  // Keep the 3D/Motion tab in sync with the Animate toggle: opening the
-  // timeline should jump to Motion, and closing it should jump back to 3D —
-  // regardless of which tab the user had manually selected before.
   useEffect(() => {
     onModeChange(animateOpen ? "flat" : "3d");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animateOpen]);
 
   const stageProps = {

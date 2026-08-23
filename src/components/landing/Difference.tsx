@@ -77,7 +77,6 @@ export default function BeforeAfterTerminalSection({
       />
 
       <div className="relative mx-auto max-w-5xl">
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -95,13 +94,12 @@ export default function BeforeAfterTerminalSection({
             <br />
             Now it looks <span className="text-[#f5a623]">shipped.</span>
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-white/50">
-            No filters, no manual masking. Drag the handle — the same source
+          <p className="mx-auto mt-4 max-w-xl text-balance text-base text-neutral-400 sm:text-lg">
+            No filters, no manual masking. Drag the handle, the same source
             image, before Framerly and after.
           </p>
         </motion.div>
 
-        {/* Terminal window */}
         <motion.div
           initial={{ opacity: 0, y: 28, scale: 0.98 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -109,7 +107,6 @@ export default function BeforeAfterTerminalSection({
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="rounded-2xl border border-white/10 bg-[#111113] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.8)]"
         >
-          {/* title bar */}
           <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
@@ -125,7 +122,6 @@ export default function BeforeAfterTerminalSection({
             </span>
           </div>
 
-          {/* compare area */}
           <div className="p-3 sm:p-5">
             <div
               ref={trackRef}
@@ -142,7 +138,6 @@ export default function BeforeAfterTerminalSection({
               onPointerLeave={onPointerUp}
               className="relative aspect-[16/10] w-full select-none overflow-hidden rounded-lg border border-white/10 bg-black cursor-ew-resize touch-none"
             >
-              {/* AFTER (full width, base layer) */}
               <div className="absolute inset-0">
                 <ImageOrFallback
                   src={afterSrc}
@@ -151,7 +146,6 @@ export default function BeforeAfterTerminalSection({
                 />
               </div>
 
-              {/* BEFORE (clipped to slider position, sits on top) */}
               <div
                 className="absolute inset-0"
                 style={{ clipPath: `inset(0 ${100 - display}% 0 0)` }}
@@ -163,7 +157,6 @@ export default function BeforeAfterTerminalSection({
                 />
               </div>
 
-              {/* labels */}
               <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 font-mono text-[10px] tracking-wide text-white/70 backdrop-blur">
                 {beforeLabel}
               </span>
@@ -171,7 +164,6 @@ export default function BeforeAfterTerminalSection({
                 {afterLabel}
               </span>
 
-              {/* divider + handle */}
               <div
                 className="absolute inset-y-0 z-10 w-px bg-white/70"
                 style={{ left: `${display}%` }}

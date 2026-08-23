@@ -37,7 +37,6 @@ const steps = [
 export default function ThreeStepsSection() {
   return (
     <section className="relative bg-[#0a0a0b] py-24 px-6 overflow-hidden">
-     
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 -translate-y-1/3 rounded-full opacity-15 blur-[120px]"
@@ -47,7 +46,6 @@ export default function ThreeStepsSection() {
       />
 
       <div className="relative mx-auto max-w-5xl">
-        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -65,7 +63,6 @@ export default function ThreeStepsSection() {
           </p>
         </motion.div>
 
-        {/* Cards */}
         <div className="grid gap-6 sm:grid-cols-3">
           {steps.map((step, i) => {
             const Icon = step.icon;

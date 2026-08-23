@@ -33,7 +33,6 @@ const TICK_GAP = 50;
 const SNAP_THRESHOLD = 6;
 const ROTATE_SNAP_THRESHOLD = 4;
 
-// Resize (corner-handle) tuning.
 const MIN_ZOOM = 20;
 const MAX_ZOOM = 400;
 
@@ -186,9 +185,6 @@ export default function Canvas({
   const [guide, setGuide] = useState({ x: false, y: false });
   const [isTransforming, setIsTransforming] = useState(false);
 
-  // Keep a live ref of zoom so the resize pointermove handler (registered
-  // once per drag) always reads the zoom value at drag-start time without
-  // needing to re-bind listeners on every zoom change.
   const zoomRef = useRef(zoom);
   useEffect(() => {
     zoomRef.current = zoom;
@@ -315,7 +311,6 @@ export default function Canvas({
 
       window.addEventListener("pointermove", handleMove);
       window.addEventListener("pointerup", handleUp);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [onZoom],
   );

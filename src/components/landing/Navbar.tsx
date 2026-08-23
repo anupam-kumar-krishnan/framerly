@@ -21,13 +21,6 @@ export default function Navbar() {
           <a href="#features" className="transition hover:text-ink">
             Features
           </a>
-          {/* <a
-            href="https://github.com"
-            className="flex items-center gap-1.5 transition hover:text-ink"
-          >
-            <Star size={14} className="fill-amber text-amber" />
-            <span className="font-mono text-xs">1,204</span>
-          </a> */}
         </nav>
 
         <div className="flex items-center gap-3">

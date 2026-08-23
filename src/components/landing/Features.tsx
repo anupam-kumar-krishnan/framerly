@@ -125,7 +125,7 @@ export default function BentoFeatures() {
             Every control a <span className="text-amber-400">screenshot</span>{" "}
             actually needs.
           </h2>
-          <p className="mt-3 text-[15px] text-neutral-400">
+          <p className="mx-auto mt-4 max-w-xl text-balance text-base text-neutral-400 sm:text-lg">
             Nothing you won&apos;t use. Nothing you have to fight to find.
           </p>
         </motion.div>
@@ -248,7 +248,6 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(function Tile(
         }}
       />
 
-      {/* masked ring — the border stroke nearest the cursor lights up, including on neighboring tiles whose corner/edge sits close to the cursor */}
       <div
         className="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300 ease-out"
         style={{
@@ -352,10 +351,8 @@ function FrameTexture({ kind }: { kind: string }) {
           </div>
         </div>
 
-        {/* hinge */}
         <div className="h-[2px] w-[90%] bg-neutral-500" />
 
-        {/* keyboard deck — wider than the screen, aluminum-grey, with a trackpad notch cut into the front edge */}
         <div className="relative h-[20%] w-full rounded-b-[4px] bg-gradient-to-b from-neutral-300 to-neutral-500">
           <div className="absolute left-1/2 top-0 h-[3px] w-6 -translate-x-1/2 rounded-b-full bg-neutral-800" />
         </div>
@@ -381,7 +378,6 @@ function FrameTexture({ kind }: { kind: string }) {
     );
   }
 
-  // iphone
   return (
     <div className="relative flex h-full w-full items-start justify-center bg-black pt-1.5">
       <span className="absolute top-1 h-1 w-4 rounded-full bg-neutral-800" />
@@ -502,7 +498,7 @@ function SwatchTexture({ kind }: { kind: string }) {
       />
     );
   }
-  // Mesh
+
   return (
     <div
       className="h-full w-full"

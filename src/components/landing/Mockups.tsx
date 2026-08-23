@@ -90,27 +90,21 @@ function DashboardContent() {
 function LaptopMockup() {
   return (
     <div className="w-[228px]">
-      {/* screen */}
       <div className="relative rounded-t-[14px] bg-gradient-to-b from-neutral-800 to-neutral-950 p-2 pt-3 shadow-2xl shadow-black/60 ring-1 ring-black/40">
-        {/* camera notch */}
         <div className="absolute left-1/2 top-1.5 h-[4px] w-[4px] -translate-x-1/2 rounded-full bg-black ring-1 ring-neutral-700" />
         <div className="overflow-hidden rounded-[3px] bg-neutral-950 ring-1 ring-black/60">
           <DashboardContent />
         </div>
       </div>
 
-      {/* hinge line */}
       <div className="h-[3px] bg-gradient-to-b from-neutral-600 to-neutral-500" />
 
-      {/* aluminum base / deck, slightly wider than the screen */}
       <div className="relative -mx-2">
         <div className="h-[8px] rounded-b-[7px] bg-gradient-to-b from-neutral-300 via-neutral-200 to-neutral-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-          {/* trackpad latch notch */}
           <div className="absolute left-1/2 top-0 h-[4px] w-12 -translate-x-1/2 rounded-b-[4px] bg-neutral-400/90" />
         </div>
       </div>
 
-      {/* soft contact shadow */}
       <div className="mx-auto mt-2.5 h-2 w-[72%] rounded-full bg-black/50 blur-md" />
     </div>
   );
@@ -146,15 +140,12 @@ function IphoneMockup() {
 
   return (
     <div className="relative h-[310px] w-[151px]">
-      {/* side buttons */}
       <span className="absolute -left-[2px] top-[73px] h-5 w-[3px] rounded-l-sm bg-neutral-600" />
       <span className="absolute -left-[2px] top-[100px] h-9 w-[3px] rounded-l-sm bg-neutral-600" />
       <span className="absolute -right-[2px] top-[88px] h-12 w-[3px] rounded-r-sm bg-neutral-600" />
 
-      {/* titanium frame */}
       <div className="absolute inset-x-0 bottom-0 h-[95%] w-full rounded-[39px] bg-gradient-to-br from-neutral-600 via-neutral-800 to-neutral-950 p-[3px] shadow-2xl shadow-black/60 ring-1 ring-black/40">
         <div className="relative h-full w-full overflow-hidden rounded-[36px] bg-black">
-          {/* status bar */}
           <div className="relative z-10 flex items-center justify-between px-5 pt-2.5">
             <span className="text-[9px] font-semibold text-white">9:41</span>
             <span className="flex items-center gap-[3px]">
@@ -169,10 +160,8 @@ function IphoneMockup() {
             </span>
           </div>
 
-          {/* dynamic island */}
           <div className="absolute left-1/2 top-2 h-[19px] w-[73px] -translate-x-1/2 rounded-full bg-black ring-1 ring-white/5" />
 
-          {/* app content */}
           <div className="px-2.5 pt-2.5">
             <div className="mb-1.5 flex items-center justify-between">
               <p className="text-[9px] font-semibold text-neutral-100">
@@ -211,7 +200,6 @@ function IphoneMockup() {
             </div>
           </div>
 
-          {/* home indicator */}
           <div className="absolute bottom-1.5 left-1/2 h-[3px] w-[84px] -translate-x-1/2 rounded-full bg-white/40" />
         </div>
       </div>
@@ -224,18 +212,14 @@ function IphoneMockup() {
 function GlassMockup() {
   return (
     <div className="relative w-[196px]">
-      {/* colorful blobs that bleed through the glass via backdrop-blur */}
       <div className="absolute -inset-3 -z-10 overflow-hidden rounded-[30px]">
         <div className="absolute left-2 top-2 h-24 w-24 rounded-full bg-amber-400/70 blur-2xl" />
         <div className="absolute right-0 top-14 h-20 w-20 rounded-full bg-orange-500/50 blur-2xl" />
         <div className="absolute bottom-0 left-10 h-24 w-24 rounded-full bg-rose-400/30 blur-2xl" />
       </div>
 
-      {/* the glass panel itself — neutral tint, real blur, thin bright edge */}
       <div className="relative overflow-hidden rounded-[22px] border border-white/25 bg-white/10 shadow-2xl shadow-black/40 backdrop-blur-2xl">
-        {/* top sheen — brighter highlight along the top edge like real glass */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[22px] bg-gradient-to-b from-white/25 via-white/5 to-transparent" />
-        {/* inner hairline for edge definition */}
         <div className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />
 
         <div className="relative rounded-[19px] bg-neutral-950/30 m-1.5 ring-1 ring-white/10">
@@ -315,14 +299,12 @@ export default function MockupsSection() {
 
   return (
     <section className="relative overflow-hidden bg-black px-6 py-24">
-      {/* ambient glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-[120px]"
       />
 
       <div className="relative mx-auto max-w-5xl">
-        {/* heading */}
         <motion.div
           initial={shouldReduceMotion ? undefined : "hidden"}
           whileInView={shouldReduceMotion ? undefined : "show"}
@@ -355,7 +337,6 @@ export default function MockupsSection() {
           </motion.p>
         </motion.div>
 
-        {/* preview panel */}
         <motion.div
           initial={shouldReduceMotion ? undefined : { opacity: 0, y: 30 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -363,16 +344,6 @@ export default function MockupsSection() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="rounded-[32px] border border-white/10 bg-neutral-900/40 p-6"
         >
-          {/*
-            Mobile (below sm): the desktop "scale the whole row down via a
-            CSS calc + transform" trick doesn't have room to work on narrow
-            phones (four fixed-width mockups can't shrink enough to fit
-            without becoming illegible), which is what was clipping the
-            iPhone/glass mockups out of view. Below sm we swap to a
-            horizontally-scrollable, snap-aligned row instead — every
-            mockup stays fully visible and reachable by swiping, nothing is
-            cropped. Desktop (sm and up) keeps the original layout as-is.
-          */}
           <div className="sm:hidden -mx-6 overflow-x-auto px-6 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <motion.div
               variants={containerVariants}
@@ -410,7 +381,6 @@ export default function MockupsSection() {
             </motion.div>
           </div>
 
-          {/* Desktop / tablet (sm and up): unchanged single-row layout */}
           <div
             className="mx-auto hidden overflow-hidden sm:block"
             style={
@@ -453,7 +423,6 @@ export default function MockupsSection() {
           </div>
         </motion.div>
 
-        {/* feature grid */}
         <motion.div
           variants={containerVariants}
           initial={shouldReduceMotion ? undefined : "hidden"}

@@ -209,14 +209,12 @@ export default function BackgroundsSection() {
 
   return (
     <section className="relative overflow-hidden bg-neutral-950 px-6 py-24">
-      {/* ambient glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-amber-400/10 blur-[120px]"
       />
 
       <div className="relative mx-auto max-w-5xl">
-        {/* heading */}
         <motion.div
           initial={shouldReduceMotion ? undefined : "hidden"}
           whileInView={shouldReduceMotion ? undefined : "show"}
@@ -249,7 +247,6 @@ export default function BackgroundsSection() {
           </motion.p>
         </motion.div>
 
-        {/* preview panel */}
         <motion.div
           initial={shouldReduceMotion ? undefined : { opacity: 0, y: 30 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -285,7 +282,6 @@ export default function BackgroundsSection() {
           </motion.div>
         </motion.div>
 
-        {/* feature grid */}
         <motion.div
           variants={containerVariants}
           initial={shouldReduceMotion ? undefined : "hidden"}

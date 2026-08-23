@@ -34,11 +34,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  title: "Framerly — Turn plain screenshots into polished shots",
+  title: "Framerly: Turn plain screenshots into polished shots",
   description:
     "Drop in any screenshot and Framerly wraps it in a browser, device, or app chrome, casts the shadow, and hands you back a PNG worth shipping.",
   openGraph: {
-    title: "Framerly — Turn plain screenshots into polished shots",
+    title: "Framerly: Turn plain screenshots into polished shots",
     description: "Every screenshot deserves a studio.",
     url: "https://framerly-shot.vercel.app",
     siteName: "Framerly",
@@ -52,7 +52,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Framerly — Turn plain screenshots into polished shots",
+    title: "Framerly: Turn plain screenshots into polished shots",
     description: "Every screenshot deserves a studio.",
     images: ["https://framerly-shot.vercel.app/og-image.png"],
   },

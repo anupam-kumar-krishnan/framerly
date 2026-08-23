@@ -50,11 +50,9 @@ export default function ExportPanel({
 
   return (
     <>
-      {/* click-outside overlay */}
       <div className="fixed inset-0 z-10" onClick={onClose} />
 
       <div className="absolute right-0 top-11 z-20 w-80 space-y-5 rounded-xl border border-line bg-panel-2 p-5 shadow-2xl">
-        {/* Format */}
         <div>
           <h3 className="mb-2 text-sm font-semibold text-ink">Format</h3>
           <div className="flex rounded-lg border border-line bg-panel p-1">
@@ -77,7 +75,6 @@ export default function ExportPanel({
           </p>
         </div>
 
-        {/* Quality */}
         <div>
           <h3 className="mb-2 text-sm font-semibold text-ink">Quality</h3>
           <div className="flex rounded-lg border border-line bg-panel p-1">
@@ -100,7 +97,6 @@ export default function ExportPanel({
           </p>
         </div>
 
-        {/* Resolution */}
         <div>
           <h3 className="mb-2 text-sm font-semibold text-ink">Resolution</h3>
           <div className="flex rounded-lg border border-line bg-panel p-1">
@@ -123,7 +119,6 @@ export default function ExportPanel({
           </div>
         </div>
 
-        {/* Export */}
         <button
           onClick={() =>
             onExport({
