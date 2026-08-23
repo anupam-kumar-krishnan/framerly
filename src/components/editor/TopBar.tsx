@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { ASPECTS, AspectRatio } from "./types";
 import ExportPanel, { ExportOptions } from "./ExportPanel";
+import { FaXTwitter } from "react-icons/fa6";
 
 function ToolbarIconButton({
   onClick,
@@ -242,7 +243,7 @@ export default function TopBar({
 
         <Link
           href={templatesHref}
-          className="hidden items-center gap-1.5 text-xs text-ink-dim transition hover:text-ink md:flex"
+          className="hidden items-center gap-1.5 text-sm text-ink-dim transition hover:text-ink md:flex"
         >
           <Wand2 size={13} />
           Templates
@@ -392,12 +393,19 @@ export default function TopBar({
         )}
       </div>
 
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <GithubBadge
           repo={githubRepo}
           stars={githubStars}
           size={githubIconSize}
         />
+        <a
+          href="https://x.com/kuma19028"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <FaXTwitter size={16} className="hover:text-gray-400" />
+        </a>
       </div>
     </header>
   );

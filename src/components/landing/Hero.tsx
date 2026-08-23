@@ -16,7 +16,7 @@ import {
 import { Bricolage_Grotesque } from "next/font/google";
 
 const badges = [
-  { icon: Zap, label: "Free — no sign-up" },
+  { icon: Zap, label: "Free, no sign-up required" },
   { icon: Lock, label: "100% in your browser" },
   { icon: Download, label: "Retina PNG, JPG & SVG" },
 ];
