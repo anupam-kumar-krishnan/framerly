@@ -33,6 +33,10 @@ const TICK_GAP = 50;
 const SNAP_THRESHOLD = 6;
 const ROTATE_SNAP_THRESHOLD = 4;
 
+// Resize (corner-handle) tuning.
+const MIN_ZOOM = 20;
+const MAX_ZOOM = 400;
+
 const IPHONE_OUTER_RADIUS = "10% / 20%";
 
 function Ruler({
@@ -88,7 +92,13 @@ function Ruler({
   );
 }
 
-function CornerHandle({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
+function CornerHandle({
+  position,
+  onPointerDown,
+}: {
+  position: "tl" | "tr" | "bl" | "br";
+  onPointerDown: (e: React.PointerEvent) => void;
+}) {
   const posClass = {
     tl: "-left-1.5 -top-1.5 cursor-nwse-resize",
     tr: "-right-1.5 -top-1.5 cursor-nesw-resize",
@@ -99,7 +109,8 @@ function CornerHandle({ position }: { position: "tl" | "tr" | "bl" | "br" }) {
   return (
     <div
       data-no-drag="true"
-      className={`absolute h-3 w-3 rounded-[2px] bg-white shadow-sm ${posClass}`}
+      onPointerDown={onPointerDown}
+      className={`pointer-events-auto absolute h-3 w-3 rounded-[2px] bg-white shadow-sm ${posClass}`}
       style={{ border: "2px solid #3b82f6" }}
     />
   );
@@ -116,6 +127,7 @@ export default function Canvas({
   padding,
   radius,
   zoom,
+  onZoom,
   tiltX,
   tiltY,
   aspect,
@@ -143,6 +155,7 @@ export default function Canvas({
   padding: number;
   radius: number;
   zoom: number;
+  onZoom: (z: number) => void;
   tiltX: number;
   tiltY: number;
   aspect: AspectRatio;
@@ -152,14 +165,6 @@ export default function Canvas({
   onRemoveImage: () => void;
   onRemoveCode: () => void;
   canvasRef: React.RefObject<HTMLDivElement | null>;
-  /**
-   * The already-resolved CSS style for the current playhead frame, computed
-   * upstream (see `resolveAnimationStyle` in `remotion/animationClips.ts`)
-   * from whatever sequence of animation clips is on the timeline. Pass `{}`
-   * when there is no animation clip so content renders with no transform
-   * applied — this is what fixes content being invisible/offset before any
-   * animation has been added.
-   */
   animationStyle: React.CSSProperties;
   contentMode: ContentMode;
   codeSnippet: CodeSnippetState;
@@ -180,6 +185,14 @@ export default function Canvas({
   const [rotation, setRotation] = useState(0);
   const [guide, setGuide] = useState({ x: false, y: false });
   const [isTransforming, setIsTransforming] = useState(false);
+
+  // Keep a live ref of zoom so the resize pointermove handler (registered
+  // once per drag) always reads the zoom value at drag-start time without
+  // needing to re-bind listeners on every zoom change.
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   const shadowRadius = device === "iphone" ? IPHONE_OUTER_RADIUS : radius;
 
@@ -268,6 +281,43 @@ export default function Canvas({
       window.addEventListener("pointerup", handleUp);
     },
     [rotation],
+  );
+
+  const handleResizeStart = useCallback(
+    (e: React.PointerEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!frameRef.current) return;
+      setIsTransforming(true);
+
+      const rect = frameRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const startDist = Math.hypot(e.clientX - cx, e.clientY - cy) || 1;
+      const startZoom = zoomRef.current;
+
+      const handleMove = (ev: PointerEvent) => {
+        const dist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+        const rawZoom = (startZoom * dist) / startDist;
+        const nextZoom = Math.min(
+          MAX_ZOOM,
+          Math.max(MIN_ZOOM, Math.round(rawZoom)),
+        );
+        onZoom(nextZoom);
+      };
+
+      const handleUp = () => {
+        setIsTransforming(false);
+        window.removeEventListener("pointermove", handleMove);
+        window.removeEventListener("pointerup", handleUp);
+      };
+
+      window.addEventListener("pointermove", handleMove);
+      window.addEventListener("pointerup", handleUp);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [onZoom],
   );
 
   const handleDelete = useCallback(
@@ -402,7 +452,6 @@ export default function Canvas({
         className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-black shadow-2xl"
         style={{ aspectRatio: `${ASPECTS[aspect]}` }}
       >
-        {/* Background layer */}
         <div
           className="absolute inset-0"
           style={{
@@ -418,7 +467,6 @@ export default function Canvas({
           }}
         />
 
-        {/* Content layer */}
         <div
           className="absolute inset-0 flex items-center justify-center"
           style={{
@@ -447,25 +495,28 @@ export default function Canvas({
                   style={{
                     transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
                     transformStyle: "preserve-3d",
+                    position: "relative",
                   }}
                 >
                   <div
                     style={{
+                      position: "relative",
                       boxShadow: SHADOW_CSS[shadow],
                       borderRadius: radius,
                     }}
                   >
                     <CodeBlock snippet={codeSnippet} />
                   </div>
+
+                  {selected && !isExporting && (
+                    <SelectionOverlay
+                      onRotateStart={handleRotateStart}
+                      onResizeStart={handleResizeStart}
+                      onDelete={handleDelete}
+                    />
+                  )}
                 </div>
               </div>
-
-              {selected && !isExporting && (
-                <SelectionOverlay
-                  onRotateStart={handleRotateStart}
-                  onDelete={handleDelete}
-                />
-              )}
             </div>
           ) : !image ? (
             <div className="relative flex h-full w-full items-center justify-center">
@@ -572,6 +623,7 @@ export default function Canvas({
                   style={{
                     transform: `scale(${zoom / 100}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
                     transformStyle: "preserve-3d",
+                    position: "relative",
                   }}
                 >
                   <div
@@ -594,15 +646,16 @@ export default function Canvas({
                       />
                     </DeviceFrame>
                   </div>
+
+                  {selected && !isExporting && (
+                    <SelectionOverlay
+                      onRotateStart={handleRotateStart}
+                      onResizeStart={handleResizeStart}
+                      onDelete={handleDelete}
+                    />
+                  )}
                 </div>
               </div>
-
-              {selected && !isExporting && (
-                <SelectionOverlay
-                  onRotateStart={handleRotateStart}
-                  onDelete={handleDelete}
-                />
-              )}
             </div>
           )}
 
@@ -650,7 +703,6 @@ export default function Canvas({
           )}
         </div>
 
-        {/* Center snap guides — span the full canvas, shown while dragging */}
         {hasSelectableContent && guide.x && (
           <div
             className="pointer-events-none absolute bottom-0 top-0 left-1/2 w-px -translate-x-1/2"
@@ -690,9 +742,11 @@ export default function Canvas({
 
 function SelectionOverlay({
   onRotateStart,
+  onResizeStart,
   onDelete,
 }: {
   onRotateStart: (e: React.PointerEvent) => void;
+  onResizeStart: (e: React.PointerEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
 }) {
   return (
@@ -701,26 +755,22 @@ function SelectionOverlay({
       data-no-drag="true"
       className="pointer-events-none absolute inset-0 z-50"
     >
-      {/* selection border */}
       <div
         className="pointer-events-none absolute inset-0 rounded-md"
         style={{ border: "2px solid #3b82f6" }}
       />
 
-      {/* corner handles */}
-      <CornerHandle position="tl" />
-      <CornerHandle position="tr" />
-      <CornerHandle position="bl" />
-      <CornerHandle position="br" />
+      <CornerHandle position="tl" onPointerDown={onResizeStart} />
+      <CornerHandle position="tr" onPointerDown={onResizeStart} />
+      <CornerHandle position="bl" onPointerDown={onResizeStart} />
+      <CornerHandle position="br" onPointerDown={onResizeStart} />
 
-      {/* connecting line up to the floating toolbar */}
       <div
         data-no-drag="true"
         className="pointer-events-none absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 -translate-y-full"
         style={{ backgroundColor: "#3b82f6" }}
       />
 
-      {/* rotate + delete toolbar */}
       <div
         data-no-drag="true"
         className="pointer-events-auto absolute left-1/2 top-0 flex -translate-x-1/2 -translate-y-[calc(100%+36px)] items-center gap-2"

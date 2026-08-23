@@ -950,6 +950,7 @@ export default function StudioPage() {
                 padding={state.padding}
                 radius={state.radius}
                 zoom={state.zoom}
+                onZoom={(z) => updateState({ zoom: z })}
                 tiltX={state.tiltX}
                 tiltY={state.tiltY}
                 aspect={state.aspect}
@@ -1027,6 +1028,7 @@ export default function StudioPage() {
             totalFrames={totalFrames}
             onAnimationFrame={setAnimationFrame}
             onVideoExporting={handleVideoExportingChange}
+            animateOpen={timelineOpen}
           />
         </div>
       </div>

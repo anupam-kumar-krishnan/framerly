@@ -892,6 +892,7 @@ export default function RightPanel({
   totalFrames,
   onAnimationFrame,
   onVideoExporting,
+  animateOpen,
 }: {
   mode: "3d" | "flat";
   onModeChange: (mode: "3d" | "flat") => void;
@@ -919,8 +920,23 @@ export default function RightPanel({
   totalFrames: number;
   onAnimationFrame: (frame: number) => void;
   onVideoExporting: (value: boolean) => void;
+  /**
+   * Whether the Animate timeline is currently open (mirrors the same state
+   * TopBar's `animateOpen` prop reflects). When this flips true we jump the
+   * tab to "Motion"; when it flips back to false we jump back to "3D". Pass
+   * the exact same state variable you pass to `TopBar`'s `animateOpen` prop.
+   */
+  animateOpen: boolean;
 }) {
   const [openGroup, setOpenGroup] = useState<string>("Popular");
+
+  // Keep the 3D/Motion tab in sync with the Animate toggle: opening the
+  // timeline should jump to Motion, and closing it should jump back to 3D —
+  // regardless of which tab the user had manually selected before.
+  useEffect(() => {
+    onModeChange(animateOpen ? "flat" : "3d");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animateOpen]);
 
   const stageProps = {
     background,

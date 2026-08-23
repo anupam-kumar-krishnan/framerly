@@ -600,7 +600,6 @@ export default function StudioPage() {
     [state.contentMode, updateState],
   );
 
-  // Timeline bar handlers.
   const handlePlayToggle = useCallback(() => {
     if (!hasAnimationClip) return;
     setIsPlaying((p) => !p);
@@ -712,6 +711,7 @@ export default function StudioPage() {
               padding={state.padding}
               radius={state.radius}
               zoom={state.zoom}
+              onZoom={(z) => updateState({ zoom: z })}
               tiltX={state.tiltX}
               tiltY={state.tiltY}
               aspect={state.aspect}
@@ -786,6 +786,7 @@ export default function StudioPage() {
           totalFrames={durationFrames}
           onAnimationFrame={setAnimationFrame}
           onVideoExporting={setIsVideoExporting}
+          animateOpen={timelineOpen}
         />
       </div>
     </div>
